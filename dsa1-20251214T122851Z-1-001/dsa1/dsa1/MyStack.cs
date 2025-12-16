@@ -1,20 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace dsa1
 {
     public class MyStack<T>
     {
-        private List<T> items;
+        private T[] items;
+        private int top;
 
-        public MyStack()
+        public int Capacity { get; private set; }
+
+        public MyStack(int capacity = 1000)
         {
-            items = new List<T>();
+            if (capacity <= 0) capacity = 1;
+            Capacity = capacity;
+            items = new T[Capacity];
+            top = -1;
         }
 
         public void Push(T item)
         {
-            items.Add(item);
+            if (IsFull())
+                throw new InvalidOperationException("Stack đầy!");
+
+            items[++top] = item;
         }
 
         public T Pop()
@@ -22,9 +30,10 @@ namespace dsa1
             if (IsEmpty())
                 throw new InvalidOperationException("Stack rỗng!");
 
-            T item = items[items.Count - 1];
-            items.RemoveAt(items.Count - 1);
-            return item;
+            T value = items[top];
+            items[top] = default(T); // dọn tham chiếu
+            top--;
+            return value;
         }
 
         public T Peek()
@@ -32,22 +41,47 @@ namespace dsa1
             if (IsEmpty())
                 throw new InvalidOperationException("Stack rỗng!");
 
-            return items[items.Count - 1];
+            return items[top];
         }
 
         public bool IsEmpty()
         {
-            return items.Count == 0;
+            return top == -1;
+        }
+
+        public bool IsFull()
+        {
+            return top == Capacity - 1;
         }
 
         public int Count()
         {
-            return items.Count;
+            return top + 1;
         }
 
         public void Clear()
         {
-            items.Clear();
+            // reset nhanh
+            Array.Clear(items, 0, top + 1);
+            top = -1;
+        }
+
+        // Các hàm phụ (không bắt buộc nhưng giữ để bạn dùng/debug)
+        public T[] ToArray()
+        {
+            T[] arr = new T[Count()];
+            for (int i = 0; i < arr.Length; i++)
+                arr[i] = items[i];
+            return arr;
+        }
+
+        public bool Contains(T item)
+        {
+            for (int i = 0; i <= top; i++)
+            {
+                if (Equals(items[i], item)) return true;
+            }
+            return false;
         }
 
         public void Display()
@@ -59,21 +93,9 @@ namespace dsa1
             }
 
             Console.Write("Đáy -> ");
-            foreach (var item in items)
-            {
-                Console.Write($"{item} ");
-            }
+            for (int i = 0; i <= top; i++)
+                Console.Write($"{items[i]} ");
             Console.WriteLine("<- Đỉnh");
-        }
-
-        public T[] ToArray()
-        {
-            return items.ToArray();
-        }
-
-        public bool Contains(T item)
-        {
-            return items.Contains(item);
         }
     }
 }
