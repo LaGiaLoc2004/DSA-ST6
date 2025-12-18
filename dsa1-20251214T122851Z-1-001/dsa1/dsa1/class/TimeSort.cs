@@ -21,7 +21,7 @@ public class Time
 
     private void RunCase(string title, Func<int, MyStack<int>> generator)
     {
-        Console.WriteLine($"\n===== TRẠNG THÁI: {title} =====");
+        Console.WriteLine($"\nTRẠNG THÁI: {title}");
         Console.WriteLine("Thuật toán\tSố lần\tTB (ms)\t\tPhương sai\tĐộ lệch chuẩn");
 
         PrintResult(
