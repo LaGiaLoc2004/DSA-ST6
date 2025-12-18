@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+
 public class Timing
 {
     TimeSpan startingTime;
