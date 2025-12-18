@@ -1,4 +1,5 @@
 ﻿using System;
+using dsa1;
 
 public class ThuatToanTimKiem
 {
