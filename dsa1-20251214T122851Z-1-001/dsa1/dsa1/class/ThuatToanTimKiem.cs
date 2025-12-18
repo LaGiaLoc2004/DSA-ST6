@@ -33,7 +33,7 @@ public class ThuatToanTimKiem
 
     public class DFSFinder<T>
     {
-         public bool Search(ITraversable<T> origin, Action<T> visit)
+         public void Search(ITraversable<T> origin, Action<T> visit)
          {
             MyStack<T> tempStack = new MyStack<T>();
 
