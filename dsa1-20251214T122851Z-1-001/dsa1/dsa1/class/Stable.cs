@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using dsa1;
+
 
 public class StableItem : IComparable<StableItem>
 {
@@ -12,62 +14,61 @@ public class StableItem : IComparable<StableItem>
     }
 }
 
-
 public class StabilityEvaluation
 {
+    private static Random rnd = new Random();
+
     // Tạo stack test (500 phần tử)
     private static MyStack<StableItem> CreateTestStack()
     {
         int total = 500;
-        int sameValueCount = 200;
+        int sameValueCount = 400;
+        int otherCount = 100;
 
-        var stack = new MyStack<StableItem>(total);
+        List<StableItem> list = new List<StableItem>(total);
         int index = 0;
 
-        // 200 phần tử có Value = 1
+        // 400 phần tử có Value = 1
         for (int i = 0; i < sameValueCount; i++)
         {
-            stack.Push(new StableItem
+            list.Add(new StableItem
             {
                 Value = 1,
                 OriginalIndex = index++
             });
         }
 
-        // 50 phần tử khác 1
-        Random rnd = new Random();
-
-        for (int i = sameValueCount; i < 50; i++)
+        // 100 phần tử còn lại (khác 1)
+        for (int i = 0; i < otherCount; i++)
         {
-            stack.Push(new StableItem
+            int v;
+            do
             {
-                Value = rnd.Next(2, 10),
+                v = rnd.Next(2, 10); // đảm bảo != 1
+            } while (v == 1);
+
+            list.Add(new StableItem
+            {
+                Value = v,
                 OriginalIndex = index++
             });
         }
 
-        // 200 phần tử có Value = 1
-        for (int i = 0; i < sameValueCount; i++)
+        // SHUFFLE – Fisher–Yates
+        for (int i = list.Count - 1; i > 0; i--)
         {
-            stack.Push(new StableItem
-            {
-                Value = 1,
-                OriginalIndex = index++
-            });
+            int j = rnd.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
         }
 
-        // 50 phần tử khác 1
-        for (int i = sameValueCount; i < 50; i++)
-        {
-            stack.Push(new StableItem
-            {
-                Value = rnd.Next(2, 10),
-                OriginalIndex = index++
-            });
-        }
+        // Đưa vào stack
+        MyStack<StableItem> stack = new MyStack<StableItem>(total);
+        foreach (var item in list)
+            stack.Push(item);
 
         return stack;
     }
+
 
     // Kiểm tra ổn định 1 lần
     private static bool IsStable(MyStack<StableItem> stack)
@@ -77,7 +78,7 @@ public class StabilityEvaluation
         while (!stack.IsEmpty())
             list.Add(stack.Pop());
 
-        //list.Reverse();
+        list.Reverse();
 
         for (int i = 0; i < list.Count; i++)
         {
@@ -139,7 +140,7 @@ public class StabilityEvaluation
         bool sel = RunSelectionSort(n);
         bool mer = RunMergeSort(n);
 
-        Console.WriteLine("===== ĐÁNH GIÁ ĐỘ ỔN ĐỊNH (CHẠY N LẦN) =====");
+        Console.WriteLine("ĐÁNH GIÁ ĐỘ ỔN ĐỊNH (CHẠY N LẦN)");
         Console.WriteLine($"Số lần kiểm tra: {n}");
         Console.WriteLine();
         Console.WriteLine($"Insertion Sort : {(ins ? "Ổn định" : "Không ổn định")}");
@@ -147,4 +148,3 @@ public class StabilityEvaluation
         Console.WriteLine($"Merge Sort     : {(mer ? "Ổn định" : "Không ổn định")}");
     }
 }
-
