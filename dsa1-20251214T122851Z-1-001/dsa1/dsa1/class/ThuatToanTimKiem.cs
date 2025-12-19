@@ -3,12 +3,12 @@ using dsa1;
 
 public class ThuatToanTimKiem
 {
-	public class  BFSFinder<T>
-	{
+    public class BFSFinder<T>
+    {
         private MyStack<T> chieuVao = new MyStack<T>();
         private MyStack<T> chieuRa = new MyStack<T>();
 
-        public void Search(ITraversable<T> origin, Action<T> visit)
+        public bool Search(ITraversable<T> origin, T target)
         {
             // Đưa dữ liệu vào chieuVao
             while (origin.HasNext())
@@ -16,7 +16,7 @@ public class ThuatToanTimKiem
                 chieuVao.Push(origin.Next());
             }
 
-            // BFS mô phỏng FIFO
+            // BFS mô phỏng FIFO bằng 2 Stack
             while (!chieuVao.IsEmpty() || !chieuRa.IsEmpty())
             {
                 if (chieuRa.IsEmpty())
@@ -27,15 +27,20 @@ public class ThuatToanTimKiem
                     }
                 }
 
-                visit(chieuRa.Pop());
+                T current = chieuRa.Pop();
+
+                // Logic xác nhận target
+                if (Equals(current, target))
+                    return true;
             }
+            return false;
         }
     }
 
     public class DFSFinder<T>
     {
-         public void Search(ITraversable<T> origin, Action<T> visit)
-         {
+        public bool Search(ITraversable<T> origin, T target)
+        {
             MyStack<T> tempStack = new MyStack<T>();
 
             // Đưa dữ liệu vào stack tạm thời
@@ -44,11 +49,17 @@ public class ThuatToanTimKiem
                 tempStack.Push(origin.Next());
             }
 
+            // Duyệt theo cơ chế LIFO (DFS)
             while (!tempStack.IsEmpty())
             {
-                visit(tempStack.Pop());
+                T current = tempStack.Pop();
+
+                // Logic xác nhận target
+                if (Equals(current, target))
+                    return true;
             }
-         }
+            return false;
+        }
     }
 
     public class LinearSearchFinder<T>
@@ -73,5 +84,4 @@ public class ThuatToanTimKiem
             return false;
         }
     }
-
 }
