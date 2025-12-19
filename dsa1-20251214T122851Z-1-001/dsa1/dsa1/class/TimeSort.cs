@@ -1,21 +1,18 @@
 using System;
 using dsa1;
 
-public class Time
+public class TimeSort : TimeAnalyzer
 {
-    private int n;      // số lần đo
-    private int size;   // số phần tử
+    private int size;
 
-    public Time(int n, int size)
+    public TimeSort(int n, int size) : base(n)
     {
-        this.n = n;
         this.size = size;
     }
 
-    // HÀM CHẠY TỔNG
     public void RunAll()
     {
-        RunCase("NGẪU NHIÊN",DataGenerator.TaoStackNgauNhien);
+        RunCase("NGẪU NHIÊN", DataGenerator.TaoStackNgauNhien);
         RunCase("TĂNG DẦN", DataGenerator.TaoStackTangDan);
         RunCase("GIẢM DẦN", DataGenerator.TaoStackGiamDan);
     }
@@ -27,7 +24,7 @@ public class Time
 
         PrintResult(
             "Insert",
-            Measure(n, () =>
+            Measure(() =>
             {
                 var s = generator(size);
                 ThuanToanSapXep.InsertionSort(s);
@@ -36,7 +33,7 @@ public class Time
 
         PrintResult(
             "Select",
-            Measure(n, () =>
+            Measure(() =>
             {
                 var s = generator(size);
                 ThuanToanSapXep.SelectionSort(s);
@@ -45,57 +42,11 @@ public class Time
 
         PrintResult(
             "Merge",
-            Measure(n, () =>
+            Measure(() =>
             {
                 var s = generator(size);
-                s = ThuanToanSapXep.MergeSort(s);
+                ThuanToanSapXep.MergeSort(s);
             })
         );
     }
-
-
-    private double[] Measure(int n, Action action)
-    {
-        double[] times = new double[n];
-        Timing timer = new Timing();
-
-        for (int i = 0; i < n; i++)
-        {
-            timer.startTime();
-            action();
-            timer.StopTime();
-
-            times[i] = timer.Result().TotalMilliseconds;
-        }
-
-        return times;
-    }
-
-    private void PrintResult(string name, double[] times)
-    {
-        double avg = Mean(times);
-        double var = Variance(times, avg);
-        double std = Math.Sqrt(var);
-
-        Console.WriteLine(
-            $"{name}\t\t{times.Length}\t{avg:F4}\t\t{var:F4}\t\t{std:F4}"
-        );
-    }
-
-    private double Mean(double[] data)
-    {
-        double sum = 0;
-        foreach (double x in data) sum += x;
-        return sum / data.Length;
-    }
-
-    private double Variance(double[] data, double mean)
-    {
-        double sum = 0;
-        foreach (double x in data)
-            sum += Math.Pow(x - mean, 2);
-
-        return sum / data.Length;
-    }
 }
-
