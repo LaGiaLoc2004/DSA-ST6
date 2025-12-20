@@ -4,7 +4,7 @@ namespace dsa1
 {
     public class MyStack<T>
     {
-        private T[] items;
+        private T?[] items;
         private int top;
 
         public int Capacity { get; private set; }
@@ -30,7 +30,7 @@ namespace dsa1
             if (IsEmpty())
                 throw new InvalidOperationException("Stack rỗng!");
 
-            T value = items[top];
+            T value = items[top];                                                           
             items[top] = default(T); // dọn tham chiếu
             top--;
             return value;

@@ -8,8 +8,10 @@ public class StableItem : IComparable<StableItem>
     public int Value { get; set; }
     public int OriginalIndex { get; set; }
 
-    public int CompareTo(StableItem other)
+    // Thêm dấu ? sau StableItem để cho phép null
+    public int CompareTo(StableItem? other)
     {
+        if (other == null) return 1; // Mặc định đối tượng hiện tại lớn hơn null
         return Value.CompareTo(other.Value);
     }
 }
