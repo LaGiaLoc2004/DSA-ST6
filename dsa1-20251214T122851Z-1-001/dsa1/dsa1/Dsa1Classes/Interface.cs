@@ -1,6 +1,5 @@
 ﻿using System;
 
-// Đưa interface ra ngoài để dùng trực tiếp
 public interface ITraversable<T>
 {
     bool HasNext();
