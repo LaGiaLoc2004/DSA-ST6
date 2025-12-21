@@ -13,9 +13,9 @@ D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\bin\Debug\dsa1.exe
 D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\bin\Debug\dsa1.pdb
 D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.csproj.AssemblyReference.cache
 D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.exe.config
-D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.Form1.resources
 D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.Properties.Resources.resources
 D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.csproj.GenerateResource.cache
 D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.csproj.CoreCompileInputs.cache
 D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.exe
 D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.pdb
+D:\dsa\cuoiki\dsa1-20251214T122851Z-1-001\dsa1\dsa1\obj\Debug\dsa1.Dsa1Form.ThapHaNoi.Form1.resources
