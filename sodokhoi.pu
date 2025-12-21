@@ -1,183 +1,165 @@
 @startuml
-
 ' --- CẤU HÌNH GIAO DIỆN ---
 skinparam classAttributeIconSize 0
 skinparam monochrome true
-skinparam packageStyle rectangle
 skinparam linetype ortho
+skinparam packageStyle rectangle
 scale 0.9
 
-' --- GROUP 1: CÁC FILE CẤU TRÚC DỮ LIỆU ---
-
-package "Interface.cs" {
-    interface "ITraversable<T>" {
-        + HasNext() : bool
-        + Next() : T
-    }
-    
-    class "ArrayTraversable<T>" {
-        + ArrayTraversable(data : T[])
-        + HasNext() : bool
-        + Next() : T
-    }
-}
-
-package "MyStack.cs" {
+' --- 1. NHÓM DỮ LIỆU NỀN TẢNG ---
+package "1. Cấu trúc Dữ liệu & Mô hình" {
     class "MyStack<T>" {
-        + Count : int <<get>>
+        - items : T?[]
+        - top : int
         + Capacity : int <<get>>
         --
-        + MyStack(capacity : int)
-        + Push(item : T)
+        + MyStack(capacity)
+        + Push(item)
         + Pop() : T
         + Peek() : T
         + IsEmpty() : bool
         + IsFull() : bool
+        + Count() : int
         + Clear()
-        + Contains(item : T) : bool
         + ToArray() : T[]
-        + Display()
     }
-}
 
-' --- GROUP 2: CÁC FILE MÔ HÌNH (MODELS) ---
-
-package "Move.cs" {
     class Move {
         + From : char
         + To : char
         + Disk : int
-        --
-        + Move(from, to, disk)
         + ToString() : string
     }
-}
 
-package "Stable.cs" {
     class StableItem {
-        + Value : int <<get set>>
-        + OriginalIndex : int <<get set>>
-        --
-        + CompareTo(other : StableItem?) : int
+        + Value : int
+        + OriginalIndex : int
+        + CompareTo() : int
+    }
+
+    interface "ITraversable<T>" {
+        + HasNext() : bool
+        + Next() : T
+    }
+
+    class "ArrayTraversable<T>" {
+        - data : T[]
+        - index : int
+        + HasNext() : bool
+        + Next() : T
     }
     
-    class StabilityEvaluation {
-        + {static} Evaluate(n : int)
-    }
+    "ITraversable<T>" <|.. "ArrayTraversable<T>"
 }
 
-package "Random.cs" {
-    class "DataGenerator" <<static>> {
-        + {static} TaoStackNgauNhien(size) : MyStack<int>
-        + {static} TaoStackTangDan(size) : MyStack<int>
-        + {static} TaoStackGiamDan(size) : MyStack<int>
+' --- 2. NHÓM THUẬT TOÁN ---
+package "2. Thuật toán Xử lý" {
+    class ThuanToanSapXep {
+        + {static} InsertionSort<T>(stack)
+        + {static} SelectionSort<T>(stack)
+        + {static} MergeSort<T>(stack) : MyStack<T>
+        - {static} Merge<T>(left, right) : MyStack<T>
     }
-}
 
-' --- GROUP 3: CÁC FILE THUẬT TOÁN ---
-
-package "ThuatToanSapXep.cs" {
-    class ThuatToanSapXep {
-        + {static} InsertionSort<T>(stack: MyStack<T>)
-        + {static} SelectionSort<T>(stack: MyStack<T>)
-        + {static} MergeSort<T>(stack: MyStack<T>) : MyStack<T>
-    }
-}
-
-package "ThuatToanTimKiem.cs" {
     class ThuatToanTimKiem {
-        ' Container class
+        ' Class bao ngoài
     }
-    class "BFSFinder<T>"
-    class "DFSFinder<T>" 
-    class "LinearSearchFinder<T>"
-    
+
+    class "BFSFinder<T>" {
+        - chieuVao : MyStack<T>
+        - chieuRa : MyStack<T>
+        + Search(origin, target) : bool
+    }
+
+    class "DFSFinder<T>" {
+        + Search(origin, target) : bool
+    }
+
+    class "LinearSearchFinder<T>" {
+        + Search(origin, target) : bool
+    }
+
     ThuatToanTimKiem +-- "BFSFinder<T>"
     ThuatToanTimKiem +-- "DFSFinder<T>"
     ThuatToanTimKiem +-- "LinearSearchFinder<T>"
 }
 
-' --- GROUP 4: CÁC FILE ĐO LƯỜNG (TIMING) ---
+' --- 3. NHÓM ĐO LƯỜNG & TIỆN ÍCH ---
+package "3. Công cụ Đo lường & Hỗ trợ" {
+    class DataGenerator <<static>> {
+        + {static} TaoStackNgauNhien(size)
+        + {static} TaoStackTangDan(size)
+        + {static} TaoStackGiamDan(size)
+    }
 
-package "Timing.cs" {
     class Timing {
+        - startingTime : TimeSpan
+        - duration : TimeSpan
         + startTime()
         + StopTime()
         + Result() : TimeSpan
     }
-}
 
-package "TimeAnalyzer.cs" {
     abstract class TimeAnalyzer {
-        ' Base class
+        # n : int
+        # Measure(action) : double[]
+        # PrintResult(name, times)
     }
-}
 
-package "TimeSort.cs" {
     class TimeSort {
+        - size : int
         + TimeSort(n, size)
         + RunAll()
     }
-}
 
-package "TimeSearch.cs" {
     class TimeSearch {
+        - size : int
         + TimeSearch(n, size)
         + Run()
     }
+
+    TimeAnalyzer <|-- TimeSort
+    TimeAnalyzer <|-- TimeSearch
+    TimeAnalyzer ..> Timing : uses
 }
 
-' --- GROUP 5: APP & MAIN ---
-
-package "HanoiUsingStack.cs" {
+' --- 4. NHÓM ỨNG DỤNG ---
+package "4. Ứng dụng Thực tế" {
     class HanoiUsingStack {
-        + Steps : List<string> <<get>>
-        + Moves : List<Move> <<get>>
-        --
-        + HanoiUsingStack()
-        + SolveIterative(n : int)
+        - src, aux, dest : MyStack<int>
+        + Steps : List<string>
+        + Moves : List<Move>
+        + SolveIterative(n)
+        - MoveDisk(...)
     }
-}
 
-package "Program.cs" {
+    class StabilityEvaluation {
+        + {static} Evaluate(n)
+        - {static} IsStable(stack) : bool
+    }
+
     class Program <<static>> {
-        + {static} Main()
+        - {static} Main()
     }
 }
 
-' --- ĐỊNH NGHĨA QUAN HỆ ---
+' --- ĐỊNH NGHĨA QUAN HỆ (VẼ SAU CÙNG ĐỂ BỐ CỤC ĐẸP) ---
 
-' 1. Quan hệ thực thi
-"ITraversable<T>" <|.. "ArrayTraversable<T>"
-TimeAnalyzer <|-- TimeSort
-TimeAnalyzer <|-- TimeSearch
+' Quan hệ Thuật toán -> Dữ liệu
+ThuanToanSapXep ..> "MyStack<T>" : thao tác
+"BFSFinder<T>" ..> "ITraversable<T>" : duyệt
+"BFSFinder<T>" --> "MyStack<T>" : dùng 2 stack
 
-' 2. Quan hệ phụ thuộc chính
-ThuatToanSapXep ..> "MyStack<T>"
-"BFSFinder<T>" ..> "ITraversable<T>"
+' Quan hệ Ứng dụng -> Dữ liệu
+HanoiUsingStack --> "MyStack<T>" : có 3 cọc
+HanoiUsingStack ..> Move : tạo danh sách
+StabilityEvaluation ..> StableItem : kiểm tra
 
-DataGenerator ..> "MyStack<T>" : creates
-
-HanoiUsingStack ..> "MyStack<T>"
-HanoiUsingStack --> Move
-
-' 3. Quan hệ đo lường
-TimeSort ..> ThuatToanSapXep
-TimeSort ..> DataGenerator
-TimeSort ..> Timing
-
-TimeSearch ..> ThuatToanTimKiem
-TimeSearch ..> DataGenerator
-TimeSearch ..> Timing
-
-' 4. Quan hệ Stability
-StabilityEvaluation ..> StableItem
-StabilityEvaluation ..> ThuatToanSapXep
-
-' 5. Program chạy tất cả
-Program ..> HanoiUsingStack
-Program ..> TimeSort
-Program ..> TimeSearch
-Program ..> StabilityEvaluation
+' Quan hệ Đo lường -> Thuật toán & Tiện ích
+TimeSort ..> ThuanToanSapXep : đo
+TimeSort ..> DataGenerator : lấy dữ liệu
+TimeSearch ..> ThuatToanTimKiem : đo
+TimeSearch ..> DataGenerator : lấy dữ liệu
+StabilityEvaluation ..> ThuanToanSapXep : kiểm tra ổn định
 
 @enduml
