@@ -1,97 +1,185 @@
 @startuml
-' --- CẤU HÌNH ---
+' --- CẤU HÌNH GIAO DIỆN ---
 skinparam classAttributeIconSize 0
 skinparam monochrome true
-skinparam linetype ortho 
+skinparam linetype ortho
 skinparam packageStyle rectangle
 skinparam shadowing false
-left to right direction 
+scale 0.9
 
-' --- KHỐI 1: LÕI STACK ---
-package "1.CÀI ĐẶT STACK" {
-    class "MyStack<T>" {
-        + Push(item)
-        + Pop() : T
-        + Peek() : T
-        + IsEmpty() : bool
-        + Count() : int
-    }
-    
-    interface "ITraversable<T>" {
-        + Next() : T
-    }
-    
-    "ITraversable<T>" <|.. "ArrayTraversable"
-}
+' QUAN TRỌNG: Ép sơ đồ trải theo chiều ngang
+left to right direction
 
-' --- KHỐI 2: ỨNG DỤNG ---
-package "2. CÁC ỨNG DỤNG CỦA STACK" {
-    
-    package "Bài toán Tháp Hà Nội" {
-        class HanoiUsingStack {
-            + SolveIterative(n)
-        }
-        class Move {
-            + From, To, Disk
-        }
+' ==========================================
+' NHÓM 1 (BÊN TRÁI): CÔNG CỤ ĐO LƯỜNG & CHẠY
+' ==========================================
+package "1. CÔNG CỤ ĐO LƯỜNG" {
+    class Program <<static>> {
+        - {static} Main() : void
     }
 
-    package "Thuật toán Cấu trúc dữ liệu" {
-        class ThuanToanSapXep {
-            + InsertionSort(stack)
-            + MergeSort(stack)
-        }
-
-        class ThuatToanTimKiem {
-            + BFSFinder(dùng 2 Stack)
-            + DFSFinder
-        }
-    }
-}
-
-' --- KHỐI 3: ĐÁNH GIÁ HIỆU NĂNG ---
-package "3. ĐÁNH GIÁ HIỆU NĂNG" {
-    class DataGenerator {
-        + TaoStackNgauNhien()
+    class DataGenerator <<static>> {
+        + {static} TaoStackNgauNhien(size : int) : MyStack<int>
+        + {static} TaoStackTangDan(size : int) : MyStack<int>
+        + {static} TaoStackGiamDan(size : int) : MyStack<int>
     }
 
     class Timing {
-        + Start()
-        + Stop()
-        + Result()
+        - startingTime : TimeSpan
+        - duration : TimeSpan
+        + Timing()
+        + startTime() : void
+        + StopTime() : void
+        + Result() : TimeSpan
     }
 
     abstract class TimeAnalyzer {
-        # Measure()
-        # PrintResult()
+        # n : int
+        # TimeAnalyzer(n : int)
+        # Measure(action : Action) : double[]
+        # Mean(data : double[]) : double
+        # Variance(data : double[], mean : double) : double
+        # PrintResult(name : string, times : double[]) : void
     }
 
     class TimeSort {
-        + RunAll()
+        - size : int
+        + TimeSort(n : int, size : int)
+        + RunAll() : void
+        - RunCase(title, generator) : void
+    }
+
+    class TimeSearch {
+        - size : int
+        + TimeSearch(n : int, size : int)
+        + Run() : void
+    }
+
+    ' Quan hệ kế thừa & sử dụng
+    TimeAnalyzer <|-- TimeSort
+    TimeAnalyzer <|-- TimeSearch
+    TimeAnalyzer ..> Timing
+}
+package "2. THUẬT TOÁN VÀ ỨNG DỤNG" {
+    
+    ' --- THUẬT TOÁN ---
+    class ThuanToanSapXep {
+        + {static} InsertionSort<T>(stack) : void
+        + {static} SelectionSort<T>(stack) : void
+        + {static} MergeSort<T>(stack) : MyStack<T>
+        - {static} Merge<T>(left, right) : MyStack<T>
+    }
+
+    class ThuatToanTimKiem {
+        ' Container class
     }
     
-    class TimeSearch {
-        + Run()
+    class "BFSFinder<T>" {
+        - chieuVao : MyStack<T>
+        - chieuRa : MyStack<T>
+        + Search(origin, target) : bool
     }
+    
+    class "DFSFinder<T>" {
+        + Search(origin, target) : bool
+    }
+
+    class "LinearSearchFinder<T>" {
+        + Search(origin, target) : bool
+    }
+    
+    ThuatToanTimKiem +-- "BFSFinder<T>"
+    ThuatToanTimKiem +-- "DFSFinder<T>"
+    ThuatToanTimKiem +-- "LinearSearchFinder<T>"
+
+    ' --- THÁP HÀ NỘI ---
+    class HanoiUsingStack {
+        - src : MyStack<int>
+        - aux : MyStack<int>
+        - dest : MyStack<int>
+        + Steps : List<string>
+        + Moves : List<Move>
+        + HanoiUsingStack()
+        - Init(n : int) : void
+        - Log(message : string) : void
+        - AddMove(from, to, disk) : void
+        - MoveDisk(from, to, fromName, toName) : void
+        + SolveIterative(n : int) : void
+    }
+
+    class Move {
+        + From : char
+        + To : char
+        + Disk : int
+        + Move(from, to, disk)
+        + ToString() : string
+    }
+    
+    HanoiUsingStack ..> Move
+
+    ' --- ĐỘ ỔN ĐỊNH ---
+    class StableItem {
+        + Value : int
+        + OriginalIndex : int
+        + CompareTo(other) : int
+    }
+
+    class StabilityEvaluation {
+        - {static} rnd : Random
+        - {static} CreateTestStack()
+        - {static} IsStable(stack)
+        + {static} Evaluate(n)
+    }
+    
+    StabilityEvaluation ..> StableItem
 }
+package "3. CÀI ĐẶT" {
+    class "MyStack<T>" {
+        - items : T?[]
+        - top : int
+        + Capacity : int <<get>>
+        + MyStack(capacity : int)
+        + Push(item : T) : void
+        + Pop() : T
+        + Peek() : T
+        + IsEmpty() : bool
+        + IsFull() : bool
+        + Count() : int
+        + Clear() : void
+        + ToArray() : T[]
+        + Contains(item) : bool
+        + Display() : void
+    }
 
-' --- QUAN HỆ (VẼ ĐỂ KHÔNG BỊ RỐI) ---
+    interface "ITraversable<T>" {
+        + HasNext() : bool
+        + Next() : T
+    }
 
-' 1. Stack là trung tâm
-"MyStack<T>" <.. HanoiUsingStack
-"MyStack<T>" <.. ThuanToanSapXep
-"MyStack<T>" <.. ThuatToanTimKiem
+    class "ArrayTraversable<T>" {
+        - data : T[]
+        - index : int
+        + ArrayTraversable(data)
+        + HasNext() : bool
+        + Next() : T
+    }
 
-' 2. Quan hệ nội bộ ứng dụng
-HanoiUsingStack ..> Move
-
-' 3. Quan hệ đo lường (KẾ THỪA & SỬ DỤNG)
-TimeAnalyzer <|-- TimeSort : Kế thừa
-TimeAnalyzer <|-- TimeSearch : Kế thừa
-TimeAnalyzer ..> Timing : Dùng để bấm giờ
-
-DataGenerator ..> "MyStack<T>"
+    "ITraversable<T>" <|.. "ArrayTraversable<T>"
+}
+' Nhóm 1 gọi Nhóm 2
 TimeSort ..> ThuanToanSapXep
 TimeSearch ..> ThuatToanTimKiem
+Program ..> TimeSort
+Program ..> TimeSearch
+Program ..> HanoiUsingStack
+DataGenerator ..> "MyStack<T>" : tạo
+
+' Nhóm 2 gọi Nhóm 3
+ThuanToanSapXep ..> "MyStack<T>"
+"BFSFinder<T>" --> "MyStack<T>" : dùng 2 stack
+"BFSFinder<T>" ..> "ITraversable<T>"
+HanoiUsingStack --> "MyStack<T>" : dùng 3 cọc
+StabilityEvaluation ..> "MyStack<T>"
+StabilityEvaluation ..> ThuanToanSapXep
 
 @enduml
