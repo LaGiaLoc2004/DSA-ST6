@@ -1,165 +1,97 @@
 @startuml
-' --- CẤU HÌNH GIAO DIỆN ---
+' --- CẤU HÌNH ---
 skinparam classAttributeIconSize 0
 skinparam monochrome true
-skinparam linetype ortho
+skinparam linetype ortho 
 skinparam packageStyle rectangle
-scale 0.9
+skinparam shadowing false
+left to right direction 
 
-' --- 1. NHÓM DỮ LIỆU NỀN TẢNG ---
-package "1. Cấu trúc Dữ liệu & Mô hình" {
+' --- KHỐI 1: LÕI STACK ---
+package "1.CÀI ĐẶT STACK" {
     class "MyStack<T>" {
-        - items : T?[]
-        - top : int
-        + Capacity : int <<get>>
-        --
-        + MyStack(capacity)
         + Push(item)
         + Pop() : T
         + Peek() : T
         + IsEmpty() : bool
-        + IsFull() : bool
         + Count() : int
-        + Clear()
-        + ToArray() : T[]
     }
-
-    class Move {
-        + From : char
-        + To : char
-        + Disk : int
-        + ToString() : string
-    }
-
-    class StableItem {
-        + Value : int
-        + OriginalIndex : int
-        + CompareTo() : int
-    }
-
+    
     interface "ITraversable<T>" {
-        + HasNext() : bool
-        + Next() : T
-    }
-
-    class "ArrayTraversable<T>" {
-        - data : T[]
-        - index : int
-        + HasNext() : bool
         + Next() : T
     }
     
-    "ITraversable<T>" <|.. "ArrayTraversable<T>"
+    "ITraversable<T>" <|.. "ArrayTraversable"
 }
 
-' --- 2. NHÓM THUẬT TOÁN ---
-package "2. Thuật toán Xử lý" {
-    class ThuanToanSapXep {
-        + {static} InsertionSort<T>(stack)
-        + {static} SelectionSort<T>(stack)
-        + {static} MergeSort<T>(stack) : MyStack<T>
-        - {static} Merge<T>(left, right) : MyStack<T>
+' --- KHỐI 2: ỨNG DỤNG ---
+package "2. CÁC ỨNG DỤNG CỦA STACK" {
+    
+    package "Bài toán Tháp Hà Nội" {
+        class HanoiUsingStack {
+            + SolveIterative(n)
+        }
+        class Move {
+            + From, To, Disk
+        }
     }
 
-    class ThuatToanTimKiem {
-        ' Class bao ngoài
-    }
+    package "Thuật toán Cấu trúc dữ liệu" {
+        class ThuanToanSapXep {
+            + InsertionSort(stack)
+            + MergeSort(stack)
+        }
 
-    class "BFSFinder<T>" {
-        - chieuVao : MyStack<T>
-        - chieuRa : MyStack<T>
-        + Search(origin, target) : bool
+        class ThuatToanTimKiem {
+            + BFSFinder(dùng 2 Stack)
+            + DFSFinder
+        }
     }
-
-    class "DFSFinder<T>" {
-        + Search(origin, target) : bool
-    }
-
-    class "LinearSearchFinder<T>" {
-        + Search(origin, target) : bool
-    }
-
-    ThuatToanTimKiem +-- "BFSFinder<T>"
-    ThuatToanTimKiem +-- "DFSFinder<T>"
-    ThuatToanTimKiem +-- "LinearSearchFinder<T>"
 }
 
-' --- 3. NHÓM ĐO LƯỜNG & TIỆN ÍCH ---
-package "3. Công cụ Đo lường & Hỗ trợ" {
-    class DataGenerator <<static>> {
-        + {static} TaoStackNgauNhien(size)
-        + {static} TaoStackTangDan(size)
-        + {static} TaoStackGiamDan(size)
+' --- KHỐI 3: ĐÁNH GIÁ HIỆU NĂNG ---
+package "3. ĐÁNH GIÁ HIỆU NĂNG" {
+    class DataGenerator {
+        + TaoStackNgauNhien()
     }
 
     class Timing {
-        - startingTime : TimeSpan
-        - duration : TimeSpan
-        + startTime()
-        + StopTime()
-        + Result() : TimeSpan
+        + Start()
+        + Stop()
+        + Result()
     }
 
     abstract class TimeAnalyzer {
-        # n : int
-        # Measure(action) : double[]
-        # PrintResult(name, times)
+        # Measure()
+        # PrintResult()
     }
 
     class TimeSort {
-        - size : int
-        + TimeSort(n, size)
         + RunAll()
     }
-
+    
     class TimeSearch {
-        - size : int
-        + TimeSearch(n, size)
         + Run()
     }
-
-    TimeAnalyzer <|-- TimeSort
-    TimeAnalyzer <|-- TimeSearch
-    TimeAnalyzer ..> Timing : uses
 }
 
-' --- 4. NHÓM ỨNG DỤNG ---
-package "4. Ứng dụng Thực tế" {
-    class HanoiUsingStack {
-        - src, aux, dest : MyStack<int>
-        + Steps : List<string>
-        + Moves : List<Move>
-        + SolveIterative(n)
-        - MoveDisk(...)
-    }
+' --- QUAN HỆ (VẼ ĐỂ KHÔNG BỊ RỐI) ---
 
-    class StabilityEvaluation {
-        + {static} Evaluate(n)
-        - {static} IsStable(stack) : bool
-    }
+' 1. Stack là trung tâm
+"MyStack<T>" <.. HanoiUsingStack
+"MyStack<T>" <.. ThuanToanSapXep
+"MyStack<T>" <.. ThuatToanTimKiem
 
-    class Program <<static>> {
-        - {static} Main()
-    }
-}
+' 2. Quan hệ nội bộ ứng dụng
+HanoiUsingStack ..> Move
 
-' --- ĐỊNH NGHĨA QUAN HỆ (VẼ SAU CÙNG ĐỂ BỐ CỤC ĐẸP) ---
+' 3. Quan hệ đo lường (KẾ THỪA & SỬ DỤNG)
+TimeAnalyzer <|-- TimeSort : Kế thừa
+TimeAnalyzer <|-- TimeSearch : Kế thừa
+TimeAnalyzer ..> Timing : Dùng để bấm giờ
 
-' Quan hệ Thuật toán -> Dữ liệu
-ThuanToanSapXep ..> "MyStack<T>" : thao tác
-"BFSFinder<T>" ..> "ITraversable<T>" : duyệt
-"BFSFinder<T>" --> "MyStack<T>" : dùng 2 stack
-
-' Quan hệ Ứng dụng -> Dữ liệu
-HanoiUsingStack --> "MyStack<T>" : có 3 cọc
-HanoiUsingStack ..> Move : tạo danh sách
-StabilityEvaluation ..> StableItem : kiểm tra
-
-' Quan hệ Đo lường -> Thuật toán & Tiện ích
-TimeSort ..> ThuanToanSapXep : đo
-TimeSort ..> DataGenerator : lấy dữ liệu
-TimeSearch ..> ThuatToanTimKiem : đo
-TimeSearch ..> DataGenerator : lấy dữ liệu
-StabilityEvaluation ..> ThuanToanSapXep : kiểm tra ổn định
+DataGenerator ..> "MyStack<T>"
+TimeSort ..> ThuanToanSapXep
+TimeSearch ..> ThuatToanTimKiem
 
 @enduml
