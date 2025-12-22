@@ -6,7 +6,7 @@ using System.Windows.Forms;
 using System.Diagnostics; 
 using System.Linq; 
 
-// QUAN TRỌNG: namespace phải là dsa1 để "nhìn thấy" các file trong thư mục Classes
+// QUAN TRỌNG: namespace phải là dsa1
 namespace dsa1 
 {
     // REGION 1: CÁC CLASS HỖ TRỢ RIÊNG CHO GIAO DIỆN
