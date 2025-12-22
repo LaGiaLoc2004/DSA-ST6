@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -6,12 +6,12 @@ using System.Windows.Forms;
 using System.Diagnostics; 
 using System.Linq; 
 
-namespace dsa1
+namespace dsa1 // Namespace chuẩn khớp với Program.cs
 {
-    // ==========================================
-    // 1. CÁC CLASS HỖ TRỢ
-    // ==========================================
-    
+    // REGION 1: CÁC CLASS HỖ TRỢ (DATA STRUCTURES & HELPERS)
+    #region DataStructures_Helpers
+
+    // 1. Panel chống nháy
     public class SuperBufferedPanel : Panel {
         public SuperBufferedPanel() {
             this.DoubleBuffered = true;
@@ -20,6 +20,7 @@ namespace dsa1
         }
     }
 
+    // 2. Stack tự định nghĩa
     public class AppStack<T> {
         private List<T> _items = new List<T>();
         public int Count => _items.Count;
@@ -29,12 +30,14 @@ namespace dsa1
         public T[] ToArray() => _items.ToArray();
     }
 
+    // 3. Node đồ thị
     public class AppGraphNode { 
         public int Value; 
         public Point Position; 
         public List<int> Neighbors = new List<int>(); 
     }
 
+    // 4. Hỗ trợ Hanoi
     public struct AppMove { public char From, To; public AppMove(char f, char t){From=f; To=t;} }
     public class AppHanoiSolver {
         public List<AppMove> Moves = new List<AppMove>();
@@ -46,33 +49,39 @@ namespace dsa1
         void Record(char f, char t, int d) { Moves.Add(new AppMove(f, t)); Steps.Add($"Chuyển đĩa {d} từ {f} sang {t}"); }
     }
 
-    // ==========================================
-    // 2. FORM CHÍNH (FINAL 5 - FIXED BUTTONS)
-    // ==========================================
+    #endregion
+    // REGION 2: FORM CHÍNH & KHAI BÁO BIẾN
     public partial class Form1 : Form
     {
-        // UI
+        #region UI_Components
         private Panel pnlTop; private ComboBox cboAlgo;
         private Panel pnlLeft; private GroupBox grpInput;
         private Label lblN, lblOrder, lblTarget, lblRuns;
         private NumericUpDown nudN, nudTarget, nudRuns;
         private ComboBox cboOrder; 
-        private Button btnInit, btnRun, btnPause, btnSpeed; // Nút điều khiển
+        private Button btnInit, btnRun, btnPause, btnSpeed;
         private GroupBox grpOutput; private ListBox lstLog;
         private SuperBufferedPanel pnlCenter; 
         private Panel pnlStats; private Label lblStatsContent;
+        #endregion
 
-        // DATA
+        #region Core_Data
         private AppStack<int> mainStack; 
         private int[] masterData; 
         private List<AppGraphNode> graphNodes; 
         private List<int> finalPath;
+        #endregion
 
-        // STATE
+        #region Animation_State
         private System.Windows.Forms.Timer animTimer;
         private string currentMode = "HANOI";
         private bool isPaused = false;
         private bool isFastMode = false;
+        
+        // Cờ kiểm soát việc vẽ (Nếu dữ liệu quá lớn sẽ tắt vẽ)
+        private const int LIMIT_DRAW_SORT = 200; 
+        private const int LIMIT_DRAW_SEARCH = 100; 
+        private bool shouldDraw = true;
 
         // Hanoi Vars
         private List<int>[] hanoiPegs; private List<AppMove> hanoiMoves; private int hanoiMoveIndex;
@@ -86,10 +95,15 @@ namespace dsa1
         private struct GraphStep { public int CurrentNode; public HashSet<int> Visited; public List<int> Stack1; public List<int> Stack2; public string Msg; }
         private List<GraphStep> graphSteps; private int graphStepIndex = 0;
 
-        // Sort Vars
-        private struct SortStep { public int[] Arr; public int YellowLimit; public int RedIndex; }
+        // Sort Vars (Dùng chung cho cả Merge Sort)
+        private struct SortStep { 
+            public int[] Arr; 
+            public int YellowLimit; // Vùng đã xếp / Hoặc vùng biên
+            public int RedIndex;    // Vị trí đang xét / Hoặc vị trí Merge
+        }
         private List<SortStep> sortSteps; private int sortStepIndex = 0;
         private bool isSortRunning = false;
+        #endregion
 
         public Form1() {
             InitCustomGUI();
@@ -98,59 +112,61 @@ namespace dsa1
             animTimer.Tick += AnimTimer_Tick;
             cboAlgo.SelectedIndex = 0;
         }
-
-        // --- GUI SETUP ---
+        // REGION 3: THIẾT KẾ GIAO DIỆN (GUI LAYOUT)
+        #region GUI_Setup
         private void InitCustomGUI() {
             this.Size = new Size(1350, 850);
-            this.Text = "DSA FINAL PROMAX ULTIMATE 5 (Buttons Fixed)";
+            this.Text = "DSA FINAL PROMAX 8 (Base 5 Structure + Merge Sort)";
             this.StartPosition = FormStartPosition.CenterScreen;
 
-            // TOP
+            // TOP PANEL
             pnlTop = new Panel() { Dock=DockStyle.Top, Height=60, BackColor=Color.MidnightBlue };
             Label t = new Label(){Text="THUẬT TOÁN:", Location=new Point(20,18), AutoSize=true, Font=new Font("Segoe UI",12,FontStyle.Bold), ForeColor=Color.White};
             cboAlgo = new ComboBox(){Location=new Point(150,15), Width=300, Font=new Font("Segoe UI",11), DropDownStyle=ComboBoxStyle.DropDownList};
-            cboAlgo.Items.AddRange(new string[]{"Bài toán: Tháp Hà Nội", "Sắp xếp: Insertion Sort", "Sắp xếp: Selection Sort", "Sắp xếp: Bubble Sort", "Tìm kiếm: Linear Search", "Tìm kiếm: BFS (2 Stack)", "Tìm kiếm: DFS"});
+            // Đã thay Bubble Sort bằng Merge Sort
+            cboAlgo.Items.AddRange(new string[]{"Bài toán: Tháp Hà Nội", "Sắp xếp: Insertion Sort", "Sắp xếp: Selection Sort", "Sắp xếp: Merge Sort", "Tìm kiếm: Linear Search", "Tìm kiếm: BFS (2 Stack)", "Tìm kiếm: DFS"});
             cboAlgo.SelectedIndexChanged += (s,e) => ChangeMode();
             pnlTop.Controls.AddRange(new Control[]{t, cboAlgo});
 
-            // LEFT
+            // LEFT PANEL
             pnlLeft = new Panel(){Dock=DockStyle.Left, Width=290, BackColor=Color.WhiteSmoke, Padding=new Padding(10)};
             grpInput = new GroupBox(){Text="ĐIỀU KHIỂN", Dock=DockStyle.Top, Height=420, Font=new Font("Segoe UI",10,FontStyle.Bold)};
             
             lblN=new Label(){Text="Số lượng (N):", Location=new Point(15,30), AutoSize=true, Font=new Font("Segoe UI",9)};
-            nudN=new NumericUpDown(){Location=new Point(15,55), Width=120, Minimum=1, Maximum=5000, Value=5};
+            // Cho phép nhập số lớn (100,000)
+            nudN=new NumericUpDown(){Location=new Point(15,55), Width=120, Minimum=1, Maximum=100000, Value=20};
             
             lblOrder=new Label(){Text="Thứ tự:", Location=new Point(140,30), AutoSize=true, Font=new Font("Segoe UI",9)};
             cboOrder=new ComboBox(){Location=new Point(140,55), Width=120, DropDownStyle=ComboBoxStyle.DropDownList};
             cboOrder.Items.AddRange(new object[]{"Tăng dần","Giảm dần"}); cboOrder.SelectedIndex=0;
 
             lblTarget=new Label(){Text="Tìm số:", Location=new Point(15,90), AutoSize=true, Font=new Font("Segoe UI",9), Visible=false};
-            nudTarget=new NumericUpDown(){Location=new Point(15,115), Width=120, Maximum=10000, Visible=false};
+            nudTarget=new NumericUpDown(){Location=new Point(15,115), Width=120, Maximum=100000, Visible=false};
 
-            lblRuns=new Label(){Text="Số lần đo:", Location=new Point(140,90), AutoSize=true, Font=new Font("Segoe UI",9)};
+            lblRuns=new Label(){Text="Số lần Test:", Location=new Point(140,90), AutoSize=true, Font=new Font("Segoe UI",9)};
             nudRuns=new NumericUpDown(){Location=new Point(140,115), Width=120, Minimum=1, Maximum=100000, Value=1};
 
-            btnInit=new Button(){Text="1. TẠO DỮ LIỆU", Location=new Point(15,170), Width=245, Height=40, BackColor=Color.PowderBlue, FlatStyle=FlatStyle.Flat};
-            btnRun=new Button(){Text="2. CHẠY MÔ PHỎNG", Location=new Point(15,220), Width=245, Height=40, BackColor=Color.LightGreen, FlatStyle=FlatStyle.Flat};
+            btnInit=new Button(){Text="1. TẠO DỮ LIỆU", Location=new Point(15,170), Width=245, Height=35, BackColor=Color.PowderBlue, FlatStyle=FlatStyle.Flat};
+            btnRun=new Button(){Text="2. CHẠY MÔ PHỎNG", Location=new Point(15,215), Width=245, Height=35, BackColor=Color.LightGreen, FlatStyle=FlatStyle.Flat};
             
-            // NÚT MỚI
-            btnPause=new Button(){Text="TẠM DỪNG", Location=new Point(15,270), Width=115, Height=40, BackColor=Color.LightYellow, FlatStyle=FlatStyle.Flat, Enabled=false};
-            btnSpeed=new Button(){Text="TỐC ĐỘ: 1x", Location=new Point(145,270), Width=115, Height=40, BackColor=Color.LightSalmon, FlatStyle=FlatStyle.Flat, Enabled=false};
+            btnPause=new Button(){Text="TẠM DỪNG", Location=new Point(15,260), Width=115, Height=35, BackColor=Color.LightYellow, FlatStyle=FlatStyle.Flat, Enabled=false};
+            btnSpeed=new Button(){Text="TỐC ĐỘ: 1x", Location=new Point(145,260), Width=115, Height=35, BackColor=Color.LightSalmon, FlatStyle=FlatStyle.Flat, Enabled=false};
 
+            // Gán sự kiện
             btnInit.Click += (s,e) => InitData();
             btnRun.Click += (s,e) => RunAlgo();
             btnPause.Click += (s,e) => TogglePause();
             btnSpeed.Click += (s,e) => ToggleSpeed();
 
-            // SỬA LỖI Ở ĐÂY: THÊM btnPause, btnSpeed VÀO GROUPBOX
+            // QUAN TRỌNG: Thêm đủ các nút vào GroupBox
             grpInput.Controls.AddRange(new Control[]{lblN, nudN, lblOrder, cboOrder, lblTarget, nudTarget, lblRuns, nudRuns, btnInit, btnRun, btnPause, btnSpeed});
             
-            grpOutput = new GroupBox(){Text="LOG", Dock=DockStyle.Fill, Font=new Font("Segoe UI",10,FontStyle.Bold)};
+            grpOutput = new GroupBox(){Text="LOG HỆ THỐNG", Dock=DockStyle.Fill, Font=new Font("Segoe UI",10,FontStyle.Bold)};
             lstLog = new ListBox(){Dock=DockStyle.Fill, Font=new Font("Consolas",9), BorderStyle=BorderStyle.None};
             grpOutput.Controls.Add(lstLog);
             pnlLeft.Controls.Add(grpOutput); pnlLeft.Controls.Add(grpInput);
 
-            // CENTER
+            // CENTER PANEL
             pnlCenter = new SuperBufferedPanel(){Dock=DockStyle.Fill, BackColor=Color.White};
             pnlCenter.Paint += PnlCenter_Paint;
             pnlCenter.Resize += (s,e) => pnlCenter.Invalidate();
@@ -163,8 +179,9 @@ namespace dsa1
 
             this.Controls.AddRange(new Control[]{pnlCenter, pnlLeft, pnlTop});
         }
-
-        // --- LOGIC ---
+        #endregion
+        // REGION 4: XỬ LÝ SỰ KIỆN & CONTROL LOGIC
+        #region Controllers
         private void ChangeMode() {
             string s = cboAlgo.SelectedItem.ToString();
             animTimer.Stop(); pnlStats.Visible=false; lstLog.Items.Clear(); ResetData();
@@ -172,16 +189,10 @@ namespace dsa1
             lblOrder.Visible=false; cboOrder.Visible=false; lblTarget.Visible=false; nudTarget.Visible=false; lblRuns.Visible=true; nudRuns.Visible=true;
             btnPause.Enabled = false; btnSpeed.Enabled = false;
 
-            if(s.Contains("Hà Nội")) { currentMode="HANOI"; lblN.Text="Số đĩa (Max 8):"; nudN.Maximum=8; nudN.Value=3; lblRuns.Visible=false; nudRuns.Visible=false; }
-            else if(s.Contains("Sắp xếp")) { 
-                currentMode="SORT"; 
-                lblN.Text="Số phần tử (Max 200):"; // Cập nhật Label
-                nudN.Maximum=200; // GIỚI HẠN CỨNG 200
-                nudN.Value=20; 
-                lblOrder.Visible=true; cboOrder.Visible=true; 
-            }
-            else if(s.Contains("Linear")) { currentMode="LINEAR"; lblN.Text="Số phần tử (Max 100):"; nudN.Maximum=100; nudN.Value=15; lblTarget.Visible=true; nudTarget.Visible=true; }
-            else { currentMode="GRAPH"; lblN.Text="Số đỉnh (Max 25):"; nudN.Maximum=25; nudN.Value=10; lblTarget.Visible=true; nudTarget.Visible=true; }
+            if(s.Contains("Hà Nội")) { currentMode="HANOI"; lblN.Text="Số đĩa (Max 8):"; nudN.Value=3; lblRuns.Visible=false; nudRuns.Visible=false; }
+            else if(s.Contains("Sắp xếp")) { currentMode="SORT"; lblN.Text="Số phần tử:"; nudN.Value=20; lblOrder.Visible=true; cboOrder.Visible=true; }
+            else if(s.Contains("Linear")) { currentMode="LINEAR"; lblN.Text="Số phần tử:"; nudN.Value=15; lblTarget.Visible=true; nudTarget.Visible=true; }
+            else { currentMode="GRAPH"; lblN.Text="Số đỉnh:"; nudN.Value=10; lblTarget.Visible=true; nudTarget.Visible=true; }
         }
 
         private void ResetData() {
@@ -208,6 +219,16 @@ namespace dsa1
             int n = (int)nudN.Value; ResetData(); pnlStats.Visible=false;
             Random rnd = new Random();
 
+            // LOGIC KIỂM TRA: VẼ hay CHẠY NGẦM
+            shouldDraw = true;
+            if(currentMode == "SORT" && n > LIMIT_DRAW_SORT) shouldDraw = false;
+            if(currentMode == "LINEAR" && n > LIMIT_DRAW_SEARCH) shouldDraw = false;
+            
+            // Riêng Hanoi phải giới hạn cứng vì 2^n quá lớn
+            if(currentMode == "HANOI" && n > 8) { n=8; nudN.Value=8; Log("! Tự chỉnh N=8 để tránh treo."); }
+
+            if (!shouldDraw) Log($"⚠ Dữ liệu lớn ({n} phần tử). Chế độ: CHẠY NGẦM (Không vẽ).");
+
             if(currentMode=="HANOI") {
                 hanoiPegs=new List<int>[3]; for(int i=0;i<3;i++) hanoiPegs[i]=new List<int>();
                 for(int i=n; i>=1; i--) hanoiPegs[0].Add(i);
@@ -221,27 +242,30 @@ namespace dsa1
                     graphNodes[p].Neighbors.Add(graphNodes[i].Value);
                     graphNodes[i].Neighbors.Add(graphNodes[p].Value);
                 }
-                int w=pnlCenter.Width-350, startY=60, levelH=90;
-                var levels=new Dictionary<int,List<AppGraphNode>>();
-                var q=new Queue<AppGraphNode>(); var vis=new HashSet<int>(); var dep=new Dictionary<int,int>();
-                q.Enqueue(graphNodes[0]); vis.Add(graphNodes[0].Value); dep[graphNodes[0].Value]=0;
-                while(q.Count>0) {
-                    var u=q.Dequeue(); int d=dep[u.Value];
-                    if(!levels.ContainsKey(d)) levels[d]=new List<AppGraphNode>(); levels[d].Add(u);
-                    foreach(var nid in u.Neighbors) {
-                        var node=graphNodes.FirstOrDefault(x=>x.Value==nid);
-                        if(node!=null && !vis.Contains(nid)) { vis.Add(nid); dep[nid]=d+1; q.Enqueue(node); }
+                // Chỉ tính tọa độ nếu cần vẽ
+                if(shouldDraw) {
+                    int w=pnlCenter.Width-350, startY=60, levelH=90;
+                    var levels=new Dictionary<int,List<AppGraphNode>>();
+                    var q=new Queue<AppGraphNode>(); var vis=new HashSet<int>(); var dep=new Dictionary<int,int>();
+                    q.Enqueue(graphNodes[0]); vis.Add(graphNodes[0].Value); dep[graphNodes[0].Value]=0;
+                    while(q.Count>0) {
+                        var u=q.Dequeue(); int d=dep[u.Value];
+                        if(!levels.ContainsKey(d)) levels[d]=new List<AppGraphNode>(); levels[d].Add(u);
+                        foreach(var nid in u.Neighbors) {
+                            var node=graphNodes.FirstOrDefault(x=>x.Value==nid);
+                            if(node!=null && !vis.Contains(nid)) { vis.Add(nid); dep[nid]=d+1; q.Enqueue(node); }
+                        }
                     }
-                }
-                foreach(var kv in levels) {
-                    int section = w / (kv.Value.Count+1);
-                    for(int i=0; i<kv.Value.Count; i++) kv.Value[i].Position = new Point((i+1)*section, startY + kv.Key*levelH);
+                    foreach(var kv in levels) {
+                        int section = w / (kv.Value.Count+1);
+                        for(int i=0; i<kv.Value.Count; i++) kv.Value[i].Position = new Point((i+1)*section, startY + kv.Key*levelH);
+                    }
                 }
                 Log($"Tạo cây {n} đỉnh.");
             }
             else { 
                 masterData = new int[n];
-                for(int i=0;i<n;i++) masterData[i]=rnd.Next(1, 100); // Random nhỏ để dễ nhìn
+                for(int i=0;i<n;i++) masterData[i]=rnd.Next(1, 1000);
                 mainStack = new AppStack<int>(); foreach(var x in masterData) mainStack.Push(x);
                 Log($"Sinh {n} số ngẫu nhiên.");
             }
@@ -260,17 +284,17 @@ namespace dsa1
 
             int runs=(int)nudRuns.Value; string algo=cboAlgo.SelectedItem.ToString(); int t=(int)nudTarget.Value;
             
-            // --- BENCHMARK ---
+            // --- 1. CHẠY BENCHMARK ---
             List<double> times=new List<double>();
             for(int i=0;i<runs;i++) {
                 Stopwatch sw=Stopwatch.StartNew();
                 if(currentMode=="SORT") {
                     int[] arr=(int[])masterData.Clone();
-                    if(algo.Contains("Insertion")) { for(int j=1;j<arr.Length;j++){int k=arr[j],z=j-1;while(z>=0&&arr[z]>k){arr[z+1]=arr[z];z--;}arr[z+1]=k;} }
-                    else if(algo.Contains("Selection")){ for(int j=0;j<arr.Length-1;j++){int m=j;for(int k=j+1;k<arr.Length;k++)if(arr[k]<arr[m])m=k;int tmp=arr[m];arr[m]=arr[j];arr[j]=tmp;} }
-                    else Array.Sort(arr); 
+                    if(algo.Contains("Insertion")) InsertionSort(arr);
+                    else if(algo.Contains("Selection")) SelectionSort(arr);
+                    else if(algo.Contains("Merge")) MergeSort(arr, 0, arr.Length - 1);
                 } else if(currentMode=="LINEAR") {
-                    bool f=false; foreach(var x in masterData) if(x==t) { f=true; break; }
+                    foreach(var x in masterData) if(x==t) break;
                 } else if(currentMode=="GRAPH") {
                     if(graphNodes.Count>0) {
                         if (algo.Contains("DFS")) { Stack<int> s=new Stack<int>(); s.Push(graphNodes[0].Value); while(s.Count>0) s.Pop(); }
@@ -280,7 +304,7 @@ namespace dsa1
                 sw.Stop(); times.Add(sw.Elapsed.TotalMilliseconds);
             }
             
-            // STATS
+            // --- 2. TÍNH TOÁN & HIỂN THỊ KẾT QUẢ ---
             double avg = times.Count > 0 ? times.Average() : 0;
             double variance = times.Count > 1 ? times.Sum(v => Math.Pow(v - avg, 2)) / (times.Count - 1) : 0;
             double sd = Math.Sqrt(variance);
@@ -291,10 +315,16 @@ namespace dsa1
                                    $"Tối thiểu  : {(times.Count>0?times.Min():0):F4} ms\n" +
                                    $"Tối đa     : {(times.Count>0?times.Max():0):F4} ms\n" +
                                    $"Phương sai : {variance:F4}\n" +
-                                   $"Độ lệch C. : {sd:F4}";
+                                   $"Độ lệch chuẩn. : {sd:F4}";
             pnlStats.Location=new Point(pnlCenter.Width-pnlStats.Width-10, 10); pnlStats.Visible=true; pnlStats.BringToFront();
 
-            // --- ANIMATION SETUP ---
+            // Nếu chế độ chạy ngầm -> Dừng tại đây, không vẽ
+            if (!shouldDraw) {
+                Log("Đã hoàn tất chạy ngầm.");
+                return;
+            }
+
+            // --- 3. CHUẨN BỊ ANIMATION (NẾU CẦN VẼ) ---
             if(currentMode=="SORT") {
                 sortSteps=new List<SortStep>();
                 int[] arr=(int[])masterData.Clone(); bool desc=cboOrder.SelectedIndex==1;
@@ -306,7 +336,7 @@ namespace dsa1
                         sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=i, RedIndex=i});
                         while(j>=0 && (desc ? arr[j]<key : arr[j]>key)) {
                             arr[j+1]=arr[j]; j--;
-                            if(arr.Length<=50 || j%2==0) sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=i, RedIndex=j+1});
+                            sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=i, RedIndex=j+1});
                         }
                         arr[j+1]=key;
                         sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=i, RedIndex=j+1});
@@ -316,22 +346,15 @@ namespace dsa1
                     for(int i=0; i<arr.Length-1; i++) {
                         int m=i;
                         for(int j=i+1; j<arr.Length; j++) {
-                            if(arr.Length<=50 || j%5==0) sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=i, RedIndex=j});
+                            sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=i, RedIndex=j});
                             if(desc ? arr[j]>arr[m] : arr[j]<arr[m]) m=j;
                         }
                         int tmp=arr[m]; arr[m]=arr[i]; arr[i]=tmp;
                         sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=i+1, RedIndex=-1});
                     }
-                } else if(algo.Contains("Bubble")) {
-                    for(int i=0; i<arr.Length-1; i++) {
-                        for(int j=0; j<arr.Length-i-1; j++) {
-                            sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=arr.Length-i, RedIndex=j});
-                            if(desc?arr[j]<arr[j+1]:arr[j]>arr[j+1]) { int t2=arr[j]; arr[j]=arr[j+1]; arr[j+1]=t2; }
-                        }
-                    }
-                } else { 
-                    Array.Sort(arr); if(desc) Array.Reverse(arr);
-                    sortSteps.Add(new SortStep{Arr=arr, YellowLimit=arr.Length, RedIndex=-1});
+                } else if(algo.Contains("Merge")) {
+                    // Gọi hàm Animation Merge Sort
+                    MergeSortAnim(arr, 0, arr.Length - 1, desc);
                 }
                 sortSteps.Add(new SortStep{Arr=arr, YellowLimit=arr.Length, RedIndex=-1});
                 sortStepIndex=0; isSortRunning=true; StartAnim();
@@ -351,8 +374,74 @@ namespace dsa1
             isPaused = false; btnPause.Text = "TẠM DỪNG";
             animTimer.Start();
         }
+        #endregion
 
-        // --- ALGO IMPL ---
+        // REGION 5: LOGIC THUẬT TOÁN (ALGORITHMS)
+        #region Algorithm_Logic
+        // --- 1. Sắp xếp (Core logic để đo thời gian) ---
+        void InsertionSort(int[] arr) {
+            for(int i=1; i<arr.Length; i++) {
+                int key=arr[i], j=i-1;
+                while(j>=0 && arr[j]>key) { arr[j+1]=arr[j]; j--; }
+                arr[j+1]=key;
+            }
+        }
+        void SelectionSort(int[] arr) {
+            for(int i=0; i<arr.Length-1; i++) {
+                int m=i;
+                for(int j=i+1; j<arr.Length; j++) if(arr[j]<arr[m]) m=j;
+                int t=arr[m]; arr[m]=arr[i]; arr[i]=t;
+            }
+        }
+        void MergeSort(int[] arr, int l, int r) {
+            if (l < r) {
+                int m = l + (r - l) / 2;
+                MergeSort(arr, l, m);
+                MergeSort(arr, m + 1, r);
+                Merge(arr, l, m, r);
+            }
+        }
+        void Merge(int[] arr, int l, int m, int r) {
+            int n1 = m - l + 1; int n2 = r - m;
+            int[] L = new int[n1]; int[] R = new int[n2];
+            Array.Copy(arr, l, L, 0, n1); Array.Copy(arr, m + 1, R, 0, n2);
+            int i=0, j=0, k=l;
+            while(i<n1 && j<n2) { if(L[i]<=R[j]) arr[k++]=L[i++]; else arr[k++]=R[j++]; }
+            while(i<n1) arr[k++]=L[i++];
+            while(j<n2) arr[k++]=R[j++];
+        }
+
+        // --- 2. Sắp xếp (Animation logic để vẽ) ---
+        void MergeSortAnim(int[] arr, int l, int r, bool desc) {
+            if (l < r) {
+                int m = l + (r - l) / 2;
+                MergeSortAnim(arr, l, m, desc);
+                MergeSortAnim(arr, m + 1, r, desc);
+                MergeAnim(arr, l, m, r, desc);
+            }
+        }
+        void MergeAnim(int[] arr, int l, int m, int r, bool desc) {
+            int n1 = m - l + 1; int n2 = r - m;
+            int[] L = new int[n1]; int[] R = new int[n2];
+            Array.Copy(arr, l, L, 0, n1); Array.Copy(arr, m + 1, R, 0, n2);
+            int i=0, j=0, k=l;
+            while(i<n1 && j<n2) {
+                bool cond = desc ? L[i]>=R[j] : L[i]<=R[j];
+                // RedIndex = k (vị trí đang ghi), YellowLimit = -1 (không dùng)
+                sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=-1, RedIndex=k}); 
+                if(cond) arr[k++]=L[i++]; else arr[k++]=R[j++];
+            }
+            while(i<n1) {
+                sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=-1, RedIndex=k});
+                arr[k++]=L[i++];
+            }
+            while(j<n2) {
+                sortSteps.Add(new SortStep{Arr=(int[])arr.Clone(), YellowLimit=-1, RedIndex=k});
+                arr[k++]=R[j++];
+            }
+        }
+
+        // --- 3. Đồ thị ---
         void RunDFS(int target) {
             Stack<int> s=new Stack<int>(); HashSet<int> v=new HashSet<int>(); Dictionary<int,int> p=new Dictionary<int,int>();
             int start=graphNodes[0].Value; s.Push(start);
@@ -406,8 +495,9 @@ namespace dsa1
             if(s2!=null) st.Stack2=s2; graphSteps.Add(st);
         }
         void Log(string s) => lstLog.Items.Insert(0, s);
-
-        // --- TIMER & RENDER ---
+        #endregion
+        // REGION 6: ĐỘNG CƠ ANIMATION & VẼ (RENDERING)
+        #region Animation_Rendering
         private void AnimTimer_Tick(object sender, EventArgs e) {
             if(currentMode=="HANOI") {
                 if(hanoiState==0) { 
@@ -416,20 +506,20 @@ namespace dsa1
                     int f=(m.From=='A')?0:(m.From=='B')?1:2; int t=(m.To=='A')?0:(m.To=='B')?1:2;
                     if(hanoiPegs[f].Count==0) return;
                     movingDiskVal=hanoiPegs[f].Last(); hanoiPegs[f].RemoveAt(hanoiPegs[f].Count-1);
-                    int w=pnlCenter.Width, h=pnlCenter.Height, by=h-50; int[] px={w/6, w/2, 5*w/6};
-                    startPos=new PointF(px[f], by-(hanoiPegs[f].Count+1)*25);
-                    endPos=new PointF(px[t], by-(hanoiPegs[t].Count+1)*25);
+                    int w=pnlCenter.Width, h=pnlCenter.Height;
+                    startPos=new PointF(w*(f==0?1:f==1?3:5)/6, h-50-(hanoiPegs[f].Count+1)*25);
+                    endPos=new PointF(w*(t==0?1:t==1?3:5)/6, h-50-(hanoiPegs[t].Count+1)*25);
                     currentPos=startPos; moveProgress=0; hanoiState=1;
                 } else { 
-                    moveProgress+=0.1f;
+                    moveProgress += (isFastMode ? 0.3f : 0.1f);
                     if(moveProgress>=1f) {
                         AppMove m=hanoiMoves[hanoiMoveIndex]; int t=(m.To=='A')?0:(m.To=='B')?1:2;
                         hanoiPegs[t].Add(movingDiskVal); movingDiskVal=-1; hanoiState=0; hanoiMoveIndex++;
                     } else {
                         float safeY=pnlCenter.Height/3;
-                        if(moveProgress<0.3f) { float p=moveProgress/0.3f; currentPos.X=startPos.X; currentPos.Y=startPos.Y+(safeY-startPos.Y)*p; }
-                        else if(moveProgress<0.7f) { float p=(moveProgress-0.3f)/0.4f; currentPos.Y=safeY; currentPos.X=startPos.X+(endPos.X-startPos.X)*p; }
-                        else { float p=(moveProgress-0.7f)/0.3f; currentPos.X=endPos.X; currentPos.Y=safeY+(endPos.Y-safeY)*p; }
+                        if(moveProgress<0.3f) currentPos.Y=startPos.Y+(safeY-startPos.Y)*(moveProgress/0.3f);
+                        else if(moveProgress<0.7f) { currentPos.Y=safeY; currentPos.X=startPos.X+(endPos.X-startPos.X)*((moveProgress-0.3f)/0.4f); }
+                        else currentPos.Y=safeY+(endPos.Y-safeY)*((moveProgress-0.7f)/0.3f);
                     }
                 }
                 pnlCenter.Invalidate();
@@ -439,10 +529,10 @@ namespace dsa1
                 else { animTimer.Stop(); btnPause.Enabled=false; }
             }
             else if(currentMode=="LINEAR") {
-                if(searchIndex>=masterData.Length) { animTimer.Stop(); btnPause.Enabled=false; Log("Không tìm thấy số cần tìm."); }
+                if(searchIndex>=masterData.Length) { animTimer.Stop(); btnPause.Enabled=false; Log("Không tìm thấy."); }
                 else if(masterData[searchIndex]==(int)nudTarget.Value) { 
                     searchFound=true; animTimer.Stop(); btnPause.Enabled=false; 
-                    Log($"Tìm thấy số {masterData[searchIndex]} tại vị trí {searchIndex}"); // In kết quả
+                    Log($"Tìm thấy số {masterData[searchIndex]} tại vị trí {searchIndex}"); 
                 }
                 else searchIndex++;
                 pnlCenter.Invalidate();
@@ -457,12 +547,19 @@ namespace dsa1
             Graphics g=e.Graphics; g.SmoothingMode=SmoothingMode.AntiAlias;
             int w=pnlCenter.Width, h=pnlCenter.Height;
 
+            // Nếu đang chế độ chạy ngầm
+            if(!shouldDraw) {
+                g.DrawString("CHẾ ĐỘ CHẠY NGẦM (Dữ liệu lớn)\nXem kết quả bên cột phải ->", new Font("Arial", 16, FontStyle.Bold), Brushes.Gray, w/2-250, h/2);
+                return;
+            }
+
             if(currentMode=="HANOI") {
                 if(hanoiPegs==null) return;
                 int by=h-100; int[] px={w/6, w/2, 5*w/6};
                 for(int p=0;p<3;p++) {
                     g.FillRectangle(Brushes.SaddleBrown, px[p]-5, by-250, 10, 250);
                     g.FillRectangle(Brushes.Gray, px[p]-60, by, 120, 10);
+                    g.DrawString($"Cọc {(char)('A'+p)}", new Font("Arial",12,FontStyle.Bold), Brushes.Black, px[p]-15, by+20);
                     for(int i=0;i<hanoiPegs[p].Count;i++) DrawDisk(g, px[p], by-(i+1)*25, hanoiPegs[p][i]);
                 }
                 if(movingDiskVal!=-1) DrawDisk(g, (int)currentPos.X, (int)currentPos.Y, movingDiskVal);
@@ -476,11 +573,12 @@ namespace dsa1
             }
             else if(currentMode=="LINEAR") {
                 if(masterData==null) return;
-                float boxW=50, gap=5, totalW=masterData.Length*(boxW+gap);
-                if(totalW > w-40) { boxW=(w-40)/masterData.Length - 2; gap=2; if(boxW<2) boxW=2; }
-                float sx=(w - (masterData.Length*(boxW+gap)))/2; if(sx<20) sx=20;
+                float boxW=50; 
+                if(masterData.Length > 0) boxW = Math.Min(50, (w-40)/masterData.Length - 2);
+                float sx=(w - (masterData.Length*(boxW+2)))/2; if(sx<20) sx=20;
+                
                 for(int i=0; i<masterData.Length; i++) {
-                    float x=sx+i*(boxW+gap); Brush b=Brushes.White;
+                    float x=sx+i*(boxW+2); Brush b=Brushes.White;
                     if(animTimer.Enabled || searchFound) { if(i==searchIndex) b=Brushes.Yellow; if(searchFound && i==searchIndex) b=Brushes.LightGreen; }
                     g.FillRectangle(b, x, h/2, boxW, boxW);
                     if(boxW>5) g.DrawRectangle(Pens.Black, x, h/2, boxW, boxW);
@@ -491,11 +589,13 @@ namespace dsa1
                 if(graphNodes==null) return;
                 var step = (graphSteps!=null && graphStepIndex>0) ? graphSteps[graphStepIndex-1] : new GraphStep();
                 
+                // Vẽ cạnh
                 using(Pen p=new Pen(Color.LightGray, 2))
                 foreach(var n in graphNodes) foreach(var nb in n.Neighbors) {
                     var t=graphNodes.FirstOrDefault(x=>x.Value==nb);
                     if(t!=null && n.Value<nb) g.DrawLine(p, n.Position, t.Position);
                 }
+                // Vẽ đường đi
                 if(finalPath!=null && !animTimer.Enabled) {
                     using(Pen p=new Pen(Color.Blue, 4))
                     for(int i=0;i<finalPath.Count-1;i++) {
@@ -504,6 +604,7 @@ namespace dsa1
                         g.DrawLine(p, p1, p2);
                     }
                 }
+                // Vẽ node
                 foreach(var n in graphNodes) {
                     Brush b=Brushes.White;
                     if(step.Visited!=null && step.Visited.Contains(n.Value)) b=Brushes.LightGreen;
@@ -516,8 +617,8 @@ namespace dsa1
                     g.DrawString(n.Value.ToString(), new Font("Arial", 11, FontStyle.Bold), Brushes.Black, n.Position.X-10, n.Position.Y-8);
                 }
                 bool bfs = cboAlgo.SelectedItem.ToString().Contains("BFS");
-                DrawBucket(g, w-240, h-50, "STACK IN", step.Stack1);
-                if(bfs) DrawBucket(g, w-120, h-50, "STACK OUT", step.Stack2);
+                DrawBucket(g, w-240, h-50, "STACK 1", step.Stack1);
+                if(bfs) DrawBucket(g, w-120, h-50, "STACK 2", step.Stack2);
             }
         }
 
@@ -553,5 +654,6 @@ namespace dsa1
                 g.DrawString(val.ToString(), new Font("Arial", 10), Brushes.Black, x-10, by-(i+1)*35+5);
             }
         }
+        #endregion
     }
 }
