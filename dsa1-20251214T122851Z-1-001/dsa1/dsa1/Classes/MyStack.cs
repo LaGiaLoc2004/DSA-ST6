@@ -1,28 +1,38 @@
-﻿using System;
+using System;
 
 namespace dsa1
 {
+    public class Node<T>
+    {
+        public Node<T> Next;
+        public T Data;
+
+        public Node(T data)
+        {
+            this.Data = data;
+            this.Next = null;
+        }
+    }
+
     public class MyStack<T>
     {
-        private T?[] items;
-        private int top;
+        private Node<T> top;
+        private int count;
 
         public int Capacity { get; private set; }
 
         public MyStack(int capacity = 1000)
         {
-            if (capacity <= 0) capacity = 1;
             Capacity = capacity;
-            items = new T[Capacity];
-            top = -1;
+            top = null;
+            count = 0;
         }
-
         public void Push(T item)
         {
-            if (IsFull())
-                throw new InvalidOperationException("Stack đầy!");
-
-            items[++top] = item;
+            Node<T> n = new Node<T>(item);
+            n.Next = top;
+            top = n;
+            count++;
         }
 
         public T Pop()
@@ -30,56 +40,62 @@ namespace dsa1
             if (IsEmpty())
                 throw new InvalidOperationException("Stack rỗng!");
 
-            T value = items[top];                                                           
-            items[top] = default(T); // dọn tham chiếu
-            top--;
+            Node<T> d = top;     
+            T value = d.Data;    
+            top = top.Next;      
+            
+            count--;
             return value;
-        }
-
-        public T Peek()
-        {
-            if (IsEmpty())
-                throw new InvalidOperationException("Stack rỗng!");
-
-            return items[top];
         }
 
         public bool IsEmpty()
         {
-            return top == -1;
+            return top == null;
+        }
+        public T Peek()
+        {
+            if (IsEmpty())
+                throw new InvalidOperationException("Stack rỗng!");
+            return top.Data;
         }
 
         public bool IsFull()
         {
-            return top == Capacity - 1;
+            return false; 
         }
 
         public int Count()
         {
-            return top + 1;
+            return count;
         }
 
         public void Clear()
         {
-            // reset nhanh
-            Array.Clear(items, 0, top + 1);
-            top = -1;
+            top = null;
+            count = 0;
         }
 
-        // Các hàm phụ (không bắt buộc nhưng giữ để bạn dùng/debug)
         public T[] ToArray()
         {
-            T[] arr = new T[Count()];
-            for (int i = 0; i < arr.Length; i++)
-                arr[i] = items[i];
+            T[] arr = new T[count];
+            Node<T> current = top;
+            int i = 0;
+            while (current != null)
+            {
+                arr[i] = current.Data;
+                current = current.Next;
+                i++;
+            }
             return arr;
         }
 
         public bool Contains(T item)
         {
-            for (int i = 0; i <= top; i++)
+            Node<T> current = top;
+            while (current != null)
             {
-                if (Equals(items[i], item)) return true;
+                if (Equals(current.Data, item)) return true;
+                current = current.Next;
             }
             return false;
         }
@@ -92,10 +108,14 @@ namespace dsa1
                 return;
             }
 
-            Console.Write("Đáy -> ");
-            for (int i = 0; i <= top; i++)
-                Console.Write($"{items[i]} ");
-            Console.WriteLine("<- Đỉnh");
+            Console.Write("Đỉnh -> ");
+            Node<T> current = top;
+            while (current != null)
+            {
+                Console.Write($"{current.Data} ");
+                current = current.Next;
+            }
+            Console.WriteLine("-> Đáy");
         }
     }
 }
