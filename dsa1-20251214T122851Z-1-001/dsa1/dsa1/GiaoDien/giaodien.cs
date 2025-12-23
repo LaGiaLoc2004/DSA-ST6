@@ -28,7 +28,7 @@ namespace dsa1
         public List<int> Neighbors = new List<int>(); 
     }
 
-    // Interface và Class hỗ trợ duyệt (Khớp báo cáo)
+    // Interface và Class hỗ trợ duyệt
     public interface ITraversable<T> { bool HasNext(); T Next(); void Reset(); }
 
     public class ArrayTraversable<T> : ITraversable<T> {
@@ -50,10 +50,10 @@ namespace dsa1
     public class TimeSort : TimeAnalyzer { public List<double> RunBenchmark(int runs, Action sortAction) { List<double> times = new List<double>(); for(int i=0; i<runs; i++) times.Add(Measure(sortAction)); return times; } }
     public class TimeSearch : TimeAnalyzer { public List<double> RunBenchmark(int runs, Action searchAction) { List<double> times = new List<double>(); for(int i=0; i<runs; i++) times.Add(Measure(searchAction)); return times; } }
     
-    // Thuật toán tìm kiếm tuyến tính (Viết tại chỗ để khớp Interface)
+    // Thuật toán tìm kiếm tuyến tính
     public class LinearSearchFinder<T> { public bool Search(ITraversable<T> origin, T target) { origin.Reset(); while (origin.HasNext()) { if (Equals(origin.Next(), target)) return true; } return false; } }
 
-    // 2. FORM CHÍNH (FORM1)
+    // 2. FORM CHÍNH
     public partial class Form1 : Form
     {
         // --- MÀU SẮC GIAO DIỆN ---
@@ -75,7 +75,7 @@ namespace dsa1
         private ListBox lstLog;
         private Label lblStatus; // Thanh trạng thái mô tả thuật toán
 
-        // --- CAMERA CONTROLS (ZOOM & PAN) ---
+        // --- CAMERA CONTROLS---
         private Panel pnlZoom;
         private Button btnZoomIn, btnZoomOut;
         private Label lblZoomValue;
@@ -134,9 +134,9 @@ namespace dsa1
             cboAlgo = new ComboBox(){Location=new Point(120,15), Width=320, Font=new Font("Segoe UI",11), DropDownStyle=ComboBoxStyle.DropDownList, FlatStyle=FlatStyle.Flat};
             
             cboAlgo.Items.Add("Bài toán Tháp Hà Nội"); // Mục chính
-            cboAlgo.Items.Add("────────────────────"); // Dòng kẻ
+            cboAlgo.Items.Add("────────────────────");
             cboAlgo.Items.Add("Mở rộng: Thuật toán Sắp xếp");
-            cboAlgo.Items.Add("   Insertion Sort"); // Thụt đầu dòng
+            cboAlgo.Items.Add("   Insertion Sort");
             cboAlgo.Items.Add("   Selection Sort");
             cboAlgo.Items.Add("   Merge Sort");
             cboAlgo.Items.Add("Mở rộng: Thuật toán Tìm kiếm");
@@ -146,7 +146,7 @@ namespace dsa1
             
             cboAlgo.SelectedIndexChanged += (s,e) => ChangeMode();
 
-            // THANH TRẠNG THÁI (Mô tả kỹ thuật)
+            // THANH TRẠNG THÁI
             lblStatus = new Label() {
                 Location = new Point(460, 18),
                 AutoSize = true,
@@ -197,11 +197,11 @@ namespace dsa1
                 if(pnlZoom != null) pnlZoom.Location = new Point(pnlCenter.Width - pnlZoom.Width - 20, pnlCenter.Height - pnlZoom.Height - 20);
             };
             
-            // LOGIC KÉO CHUỘT (PAN)
+            // LOGIC KÉO CHUỘT
             pnlCenter.MouseDown += (s, e) => { if (e.Button == MouseButtons.Right) { isDragging = true; lastMousePos = e.Location; Cursor = Cursors.SizeAll; } };
             pnlCenter.MouseMove += (s, e) => { if (isDragging) { viewOffsetX += e.X - lastMousePos.X; viewOffsetY += e.Y - lastMousePos.Y; lastMousePos = e.Location; pnlCenter.Invalidate(); } };
             pnlCenter.MouseUp += (s, e) => { if (e.Button == MouseButtons.Right) { isDragging = false; Cursor = Cursors.Default; } };
-            // LOGIC CUỘN CHUỘT (SCROLL)
+            // LOGIC CUỘN CHUỘT
             pnlCenter.MouseWheel += (s, e) => { viewOffsetY += e.Delta; pnlCenter.Invalidate(); };
 
             pnlStats = new Panel(){Size=new Size(300,220), BackColor=Color.White, BorderStyle=BorderStyle.FixedSingle, Visible=false};
@@ -249,7 +249,7 @@ namespace dsa1
             else {
                 if(s.Contains("Sort")) { 
                     currentMode="SORT"; lblN.Text="Số phần tử:"; nudN.Value=20; lblOrder.Visible=true; cboOrder.Visible=true; 
-                    lblStatus.Text = "Ứng dụng mở rộng: Dùng Stack/Queue trong các thuật toán Sắp xếp.";
+                    lblStatus.Text = "Ứng dụng mở rộng: Dùng Stack trong các thuật toán Sắp xếp.";
                 }
                 else if(s.Contains("Linear")) { 
                     currentMode="LINEAR"; lblN.Text="Số phần tử:"; nudN.Value=15; lblTarget.Visible=true; nudTarget.Visible=true; 
