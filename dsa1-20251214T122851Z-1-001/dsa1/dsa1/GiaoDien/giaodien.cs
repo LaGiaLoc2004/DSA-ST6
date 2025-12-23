@@ -257,7 +257,7 @@ namespace dsa1
                 }
                 else { 
                     currentMode="GRAPH"; lblN.Text="Số đỉnh:"; nudN.Value=10; lblTarget.Visible=true; nudTarget.Visible=true; 
-                    lblStatus.Text = "Ứng dụng mở rộng: Dùng Stack (DFS) và Queue (BFS) duyệt đồ thị.";
+                    lblStatus.Text = "Ứng dụng mở rộng: Dùng Stack DFS và BFS (2 stack) duyệt đồ thị.";
                 }
             }
         }
@@ -308,7 +308,7 @@ namespace dsa1
                 times = timeSort.RunBenchmark(runs, () => { 
                     MyStack<int> tempStack = new MyStack<int>(masterData.Length); 
                     foreach(var x in masterData) tempStack.Push(x); 
-                    // GỌI ĐÚNG CLASS 'ThuanToanSapXep' NHƯ BẠN YÊU CẦU
+                    
                     if(algo.Contains("Insertion")) ThuanToanSapXep.InsertionSort(tempStack); 
                     else if(algo.Contains("Selection")) ThuanToanSapXep.SelectionSort(tempStack); 
                     else if(algo.Contains("Merge")) ThuanToanSapXep.MergeSort(tempStack); 
