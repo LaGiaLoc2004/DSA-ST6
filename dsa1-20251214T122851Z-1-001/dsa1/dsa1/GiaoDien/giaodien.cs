@@ -26,7 +26,7 @@ namespace dsa1
 
     public partial class Form1 : Form
     {
-        // Các control giao diện
+        // --- CÁC CONTROL GIAO DIỆN ---
         private Panel pnlTop, pnlLeft, pnlStats;
         private SuperBufferedPanel pnlCenter;
         private ComboBox cboAlgo, cboOrder;
@@ -36,20 +36,20 @@ namespace dsa1
         private GroupBox grpInput, grpOutput; 
         private ListBox lstLog;
 
-        // Dữ liệu lõi
-        private MyStack<int> mainStack; // Stack lấy từ file MyStack.cs
+        // --- DỮ LIỆU LÕI ---
+        private MyStack<int> mainStack; // Sử dụng Stack tự định nghĩa
         private int[] masterData; 
         private List<UiGraphNode> graphNodes; 
-        private List<int> finalPath; // Lưu đường đi tìm được
+        private List<int> finalPath; 
 
-        // Biến điều khiển hoạt ảnh (Animation)
+        // --- BIẾN HOẠT ẢNH ---
         private System.Windows.Forms.Timer animTimer;
         private string currentMode = "HANOI";
         private bool isPaused = false;
         private bool isFastMode = false;
         private bool shouldDraw = true;
 
-        // Biến cho thuật toán
+        // --- BIẾN THUẬT TOÁN ---
         private List<int>[] hanoiPegs; 
         private List<Move> hanoiMoves; 
         private int hanoiMoveIndex, movingDiskVal = -1;
@@ -71,18 +71,17 @@ namespace dsa1
         public Form1() {
             InitCustomGUI();
             animTimer = new System.Windows.Forms.Timer();
-            animTimer.Interval = 42; 
+            animTimer.Interval = 100; 
             animTimer.Tick += AnimTimer_Tick;
             cboAlgo.SelectedIndex = 0;
         }
 
-        // Khởi tạo giao diện bằng code
         private void InitCustomGUI() {
             this.Size = new Size(1350, 850);
             this.Text = "Mô phỏng Thuật toán & Cấu trúc dữ liệu";
             this.StartPosition = FormStartPosition.CenterScreen;
 
-            // Panel trên cùng
+            // Panel Top
             pnlTop = new Panel() { Dock=DockStyle.Top, Height=60, BackColor=Color.MidnightBlue };
             Label t = new Label(){Text="THUẬT TOÁN:", Location=new Point(20,18), AutoSize=true, Font=new Font("Segoe UI",12,FontStyle.Bold), ForeColor=Color.White};
             cboAlgo = new ComboBox(){Location=new Point(150,15), Width=300, Font=new Font("Segoe UI",11), DropDownStyle=ComboBoxStyle.DropDownList};
@@ -90,7 +89,7 @@ namespace dsa1
             cboAlgo.SelectedIndexChanged += (s,e) => ChangeMode();
             pnlTop.Controls.AddRange(new Control[]{t, cboAlgo});
 
-            // Panel bên trái (Điều khiển)
+            // Panel Left
             pnlLeft = new Panel(){Dock=DockStyle.Left, Width=290, BackColor=Color.WhiteSmoke, Padding=new Padding(10)};
             grpInput = new GroupBox(){Text="ĐIỀU KHIỂN", Dock=DockStyle.Top, Height=420, Font=new Font("Segoe UI",10,FontStyle.Bold)};
             
@@ -118,7 +117,7 @@ namespace dsa1
             grpOutput.Controls.Add(lstLog);
             pnlLeft.Controls.Add(grpOutput); pnlLeft.Controls.Add(grpInput);
 
-            // Panel trung tâm (Vẽ hình)
+            // Panel Center
             pnlCenter = new SuperBufferedPanel(){Dock=DockStyle.Fill, BackColor=Color.White};
             pnlCenter.Paint += PnlCenter_Paint;
             pnlCenter.Resize += (s,e) => pnlCenter.Invalidate();
@@ -131,7 +130,6 @@ namespace dsa1
             this.Controls.AddRange(new Control[]{pnlCenter, pnlLeft, pnlTop});
         }
 
-        // Thay đổi chế độ khi chọn ComboBox
         private void ChangeMode() {
             string s = cboAlgo.SelectedItem.ToString();
             animTimer.Stop(); pnlStats.Visible=false; lstLog.Items.Clear(); ResetData();
@@ -152,9 +150,8 @@ namespace dsa1
         }
 
         private void TogglePause() { if (!animTimer.Enabled && !isPaused) return; isPaused = !isPaused; if (isPaused) { animTimer.Stop(); btnPause.Text = "TIẾP TỤC"; } else { animTimer.Start(); btnPause.Text = "TẠM DỪNG"; } }
-        private void ToggleSpeed() { isFastMode = !isFastMode; if (isFastMode) { animTimer.Interval = 5; btnSpeed.Text = "TỐC ĐỘ: MAX"; } else { animTimer.Interval = 42; btnSpeed.Text = "TỐC ĐỘ: 1x"; } }
+        private void ToggleSpeed() { isFastMode = !isFastMode; if (isFastMode) { animTimer.Interval = 5; btnSpeed.Text = "TỐC ĐỘ: MAX"; } else { animTimer.Interval = 100; btnSpeed.Text = "TỐC ĐỘ: 1x"; } }
 
-        // Khởi tạo dữ liệu
         private void InitData() {
             int n = (int)nudN.Value; ResetData(); pnlStats.Visible=false;
             Random rnd = new Random();
@@ -173,7 +170,6 @@ namespace dsa1
                 for(int i=1;i<=n;i++) graphNodes.Add(new UiGraphNode{Value=i});
                 for(int i=1;i<n;i++) { int p = rnd.Next(0, i); graphNodes[p].Neighbors.Add(graphNodes[i].Value); graphNodes[i].Neighbors.Add(graphNodes[p].Value); }
                 
-                // Thuật toán Layout cây để vẽ đẹp
                 if (shouldDraw) { 
                     int w=pnlCenter.Width-350, startY=60, levelH=90;
                     var levels=new Dictionary<int,List<UiGraphNode>>(); var q=new Queue<UiGraphNode>(); var vis=new HashSet<int>(); var dep=new Dictionary<int,int>();
@@ -187,7 +183,6 @@ namespace dsa1
                 Log($"Tạo cây {n} đỉnh.");
             }
             else { 
-                // Gọi lớp DataGenerator
                 if (cboOrder.SelectedIndex == 0) mainStack = DataGenerator.TaoStackTangDan(n);
                 else if (cboOrder.SelectedIndex == 1) mainStack = DataGenerator.TaoStackGiamDan(n);
                 else mainStack = DataGenerator.TaoStackNgauNhien(n);
@@ -198,7 +193,6 @@ namespace dsa1
             pnlCenter.Invalidate();
         }
 
-        // Chạy thuật toán
         private void RunAlgo() {
             if(currentMode=="HANOI") {
                 if(hanoiPegs==null) return;
@@ -217,7 +211,7 @@ namespace dsa1
 
             int runs=(int)nudRuns.Value; string algo=cboAlgo.SelectedItem.ToString(); int t=(int)nudTarget.Value;
             
-            // BENCHMARK (Đo thời gian)
+            // --- BENCHMARK (ĐO THỜI GIAN) ---
             List<double> times=new List<double>();
             for(int i=0;i<runs;i++) {
                 Stopwatch sw=Stopwatch.StartNew();
@@ -234,12 +228,28 @@ namespace dsa1
                     finder.Search(traversable, t);
                 } 
                 else if(currentMode=="GRAPH") {
-                    if(graphNodes.Count>0) { if (algo.Contains("DFS")) { Stack<int> s=new Stack<int>(); s.Push(graphNodes[0].Value); while(s.Count>0) s.Pop(); } else { Queue<int> q=new Queue<int>(); q.Enqueue(graphNodes[0].Value); while(q.Count>0) q.Dequeue(); } }
+                    if(graphNodes.Count>0) { 
+                        if (algo.Contains("DFS")) { 
+                            // Benchmark DFS dùng MyStack
+                            MyStack<int> s = new MyStack<int>(); 
+                            s.Push(graphNodes[0].Value); 
+                            while(s.Count() > 0) s.Pop(); 
+                        } else { 
+                            // Benchmark BFS dùng 2 MyStack
+                            MyStack<int> s1 = new MyStack<int>();
+                            MyStack<int> s2 = new MyStack<int>();
+                            s1.Push(graphNodes[0].Value);
+                            while(s1.Count() > 0 || s2.Count() > 0) {
+                                if(s2.Count() == 0) while(s1.Count() > 0) s2.Push(s1.Pop());
+                                s2.Pop();
+                            }
+                        } 
+                    }
                 }
                 sw.Stop(); times.Add(sw.Elapsed.TotalMilliseconds);
             }
             
-            // Tính toán và hiển thị thống kê
+            // THỐNG KÊ
             double avg = times.Count > 0 ? times.Average() : 0;
             double variance = times.Count > 1 ? times.Sum(v => Math.Pow(v - avg, 2)) / (times.Count - 1) : 0;
             double sd = Math.Sqrt(variance);
@@ -249,7 +259,7 @@ namespace dsa1
 
             if (!shouldDraw) { Log("Đã hoàn tất chạy ngầm."); return; }
 
-            // Chuẩn bị dữ liệu để vẽ hoạt ảnh
+            // CHUẨN BỊ VẼ
             if(currentMode=="SORT") {
                 sortSteps=new List<SortStep>();
                 int[] arr=(int[])masterData.Clone(); bool desc=cboOrder.SelectedIndex==1;
@@ -282,7 +292,6 @@ namespace dsa1
 
         private void StartAnim() { btnPause.Enabled = true; btnSpeed.Enabled = true; isPaused = false; btnPause.Text = "TẠM DỪNG"; animTimer.Start(); }
 
-        // Logic xử lý khi Timer chạy
         private void AnimTimer_Tick(object sender, EventArgs e) {
             if(currentMode=="HANOI") {
                 if(hanoiState==0) { 
@@ -320,8 +329,8 @@ namespace dsa1
                     graphStepIndex++; 
                     pnlCenter.Invalidate(); 
                 } else { 
-                    animTimer.Stop(); // Dừng hoạt ảnh
-                    // IN ĐƯỜNG ĐI Ở ĐÂY (Sau khi chạy xong)
+                    animTimer.Stop();
+                    pnlCenter.Invalidate();
                     if(finalPath != null && finalPath.Count > 0) {
                         Log("=========================");
                         Log("ĐƯỜNG ĐI: " + string.Join(" -> ", finalPath));
@@ -330,7 +339,6 @@ namespace dsa1
             }
         }
 
-        // Logic vẽ đồ họa
         private void PnlCenter_Paint(object sender, PaintEventArgs e) {
             Graphics g=e.Graphics; g.SmoothingMode=SmoothingMode.AntiAlias; int w=pnlCenter.Width, h=pnlCenter.Height;
             if(!shouldDraw) { g.DrawString("CHẾ ĐỘ CHẠY NGẦM", new Font("Arial", 18, FontStyle.Bold), Brushes.Gray, w/2-100, h/2); return; }
@@ -353,7 +361,6 @@ namespace dsa1
             else if(currentMode=="GRAPH" && graphNodes!=null) { var st=(graphSteps!=null&&graphStepIndex>0)?graphSteps[graphStepIndex-1]:new GraphStep(); using(Pen p=new Pen(Color.LightGray,2)) foreach(var n in graphNodes)foreach(var nb in n.Neighbors){var t=graphNodes.First(x=>x.Value==nb); if(n.Value<nb)g.DrawLine(p,n.Position,t.Position);} if(finalPath!=null&&!animTimer.Enabled)using(Pen p=new Pen(Color.Blue,4))for(int i=0;i<finalPath.Count-1;i++){var p1=graphNodes.First(x=>x.Value==finalPath[i]).Position;var p2=graphNodes.First(x=>x.Value==finalPath[i+1]).Position;g.DrawLine(p,p1,p2);} foreach(var n in graphNodes){Brush b=Brushes.White; if(st.Visited!=null&&st.Visited.Contains(n.Value))b=Brushes.LightGreen; if(st.CurrentNode==n.Value)b=Brushes.OrangeRed; bool inS=(st.Stack1!=null&&st.Stack1.Contains(n.Value)); if(inS)b=Brushes.Gold; g.FillEllipse(b,n.Position.X-20,n.Position.Y-20,40,40); g.DrawEllipse(Pens.Black,n.Position.X-20,n.Position.Y-20,40,40); g.DrawString(n.Value.ToString(),new Font("Arial",10),Brushes.Black,n.Position.X-10,n.Position.Y-8); } DrawBucket(g,w-240,h-50,"STACK 1",st.Stack1); if(cboAlgo.SelectedItem.ToString().Contains("BFS"))DrawBucket(g,w-120,h-50,"STACK 2",st.Stack2); }
         }
         
-        // Vẽ đĩa Hà Nội (Có số)
         void DrawDisk(Graphics g, int x, int y, int v) { 
             int w=40+v*30; 
             g.FillRectangle(Brushes.OrangeRed,x-w/2,y,w,20); 
@@ -361,7 +368,6 @@ namespace dsa1
             g.DrawString(v.ToString(), new Font("Arial", 9, FontStyle.Bold), Brushes.White, x-6, y+3);
         }
 
-        // Vẽ cột Sắp xếp (Có tô màu vàng vùng đã xếp)
         void DrawBars(Graphics g, int w, int h, int[] a, int yl, int ri) { 
             float mx=a.Length>0?a.Max():1, bw=(w-40f)/a.Length; 
             for(int i=0;i<a.Length;i++) { 
@@ -377,7 +383,6 @@ namespace dsa1
         void DrawBucket(Graphics g, int x, int by, string t, List<int> l) { g.DrawString(t,new Font("Arial",10),Brushes.Navy,x-30,40); using(Pen p=new Pen(Color.Navy,3)){g.DrawLine(p,x-40,60,x-40,by);g.DrawLine(p,x+40,60,x+40,by);g.DrawLine(p,x-40,by,x+40,by);} if(l!=null)for(int i=0;i<l.Count;i++) { g.FillRectangle(Brushes.Gold,x-35,by-(i+1)*35,70,30); g.DrawRectangle(Pens.Black,x-35,by-(i+1)*35,70,30); g.DrawString(l[l.Count-1-i].ToString(),new Font("Arial",10),Brushes.Black,x-10,by-(i+1)*35+5); } }
         void Log(string s) => lstLog.Items.Insert(0, s);
         
-        // Các hàm hỗ trợ thuật toán & ghi nhận bước vẽ
         void MergeSortAnim(int[] arr, int l, int r, bool desc) { if(l<r){int m=l+(r-l)/2;MergeSortAnim(arr,l,m,desc);MergeSortAnim(arr,m+1,r,desc);MergeAnim(arr,l,m,r,desc);} }
         void MergeAnim(int[] arr, int l, int m, int r, bool desc) {
             int n1=m-l+1,n2=r-m; int[] L=new int[n1],R=new int[n2]; Array.Copy(arr,l,L,0,n1); Array.Copy(arr,m+1,R,0,n2); int i=0,j=0,k=l;
@@ -386,31 +391,53 @@ namespace dsa1
         }
         
         void RunDFS(int t) { 
-            Stack<int> s=new Stack<int>(); HashSet<int> v=new HashSet<int>(); Dictionary<int,int> p=new Dictionary<int,int>(); 
-            s.Push(graphNodes[0].Value); bool f=false; 
-            while(s.Count>0){
-                int u=s.Pop(); RecordGraph(u,v,s.ToList(),null,$"Pop {u}"); 
+            MyStack<int> s = new MyStack<int>(); 
+            HashSet<int> v = new HashSet<int>(); 
+            Dictionary<int,int> p = new Dictionary<int,int>(); 
+            
+            s.Push(graphNodes[0].Value); 
+            bool f = false; 
+            RecordGraph(graphNodes[0].Value, v, s.ToArray().ToList(), null, $"Start: Push {graphNodes[0].Value}");
+            while(s.Count() > 0){ 
+                int u = s.Pop(); 
+                RecordGraph(u,v,s.ToArray().ToList(),null,$"Pop {u}"); 
                 if(!v.Contains(u)){
                     v.Add(u); 
-                    if(u==t){ f=true; BuildPath(p,graphNodes[0].Value,t); RecordGraph(u,v,s.ToList(),null,"TÌM THẤY!"); break; } 
-                    var nb=graphNodes.First(x=>x.Value==u).Neighbors.OrderByDescending(x=>x).ToList(); 
-                    foreach(var n in nb)if(!v.Contains(n)){s.Push(n);if(!p.ContainsKey(n))p[n]=u;}
+                    if(u==t){ f=true; BuildPath(p,graphNodes[0].Value,t); RecordGraph(u,v,s.ToArray().ToList(),null,"TÌM THẤY!"); break; } 
+                    var nb = graphNodes.First(x=>x.Value==u).Neighbors.OrderByDescending(x=>x).ToList(); 
+                    foreach(var n in nb) if(!v.Contains(n)) {
+                        s.Push(n);
+                        if(!p.ContainsKey(n)) p[n]=u;
+                        RecordGraph(u, v, s.ToArray().ToList(), null, $"Push {n}"); 
+                    }
                 }
             } 
-            if(!f)RecordGraph(-1,v,s.ToList(),null,"Không thấy đích!"); 
+            if(!f) RecordGraph(-1,v,s.ToArray().ToList(),null,"Không thấy đích!"); 
         }
         
         void RunBFS(int t) { 
-            Stack<int> sIn=new Stack<int>(), sOut=new Stack<int>(); HashSet<int> v=new HashSet<int>(); Dictionary<int,int> p=new Dictionary<int,int>(); 
-            int start=graphNodes[0].Value; sIn.Push(start); v.Add(start); bool f=false; 
-            while(sIn.Count>0||sOut.Count>0){ 
-                if(sOut.Count==0)while(sIn.Count>0)sOut.Push(sIn.Pop()); 
-                int u=sOut.Pop(); RecordGraph(u,v,sIn.ToList(),sOut.ToList(),$"Pop {u}"); 
-                if(u==t){ f=true; BuildPath(p,start,t); RecordGraph(u,v,sIn.ToList(),sOut.ToList(),"TÌM THẤY!"); break; } 
-                var nb=graphNodes.First(x=>x.Value==u).Neighbors.OrderBy(x=>x).ToList(); 
-                foreach(var n in nb)if(!v.Contains(n)){v.Add(n);sIn.Push(n);p[n]=u;} 
+            MyStack<int> sIn = new MyStack<int>(); 
+            MyStack<int> sOut = new MyStack<int>(); 
+            HashSet<int> v = new HashSet<int>(); 
+            Dictionary<int,int> p = new Dictionary<int,int>(); 
+            
+            int start = graphNodes[0].Value; 
+            sIn.Push(start); v.Add(start); 
+            RecordGraph(start, v, sIn.ToArray().ToList(), sOut.ToArray().ToList(), $"Start: Push {start}");
+
+            bool f = false; 
+            while(sIn.Count() > 0 || sOut.Count() > 0){ 
+                if(sOut.Count() == 0) while(sIn.Count() > 0) sOut.Push(sIn.Pop()); 
+                int u = sOut.Pop(); 
+                RecordGraph(u,v,sIn.ToArray().ToList(),sOut.ToArray().ToList(),$"Pop {u}"); 
+                if(u==t){ f=true; BuildPath(p,start,t); RecordGraph(u,v,sIn.ToArray().ToList(),sOut.ToArray().ToList(),"TÌM THẤY!"); break; } 
+                var nb = graphNodes.First(x=>x.Value==u).Neighbors.OrderBy(x=>x).ToList(); 
+                foreach(var n in nb) if(!v.Contains(n)){
+                    v.Add(n); sIn.Push(n); p[n]=u;
+                    RecordGraph(u, v, sIn.ToArray().ToList(), sOut.ToArray().ToList(), $"Push {n}");
+                } 
             } 
-            if(!f)RecordGraph(-1,v,sIn.ToList(),sOut.ToList(),"Không thấy đích!"); 
+            if(!f) RecordGraph(-1,v,sIn.ToArray().ToList(),sOut.ToArray().ToList(),"Không thấy đích!"); 
         }
         
         void BuildPath(Dictionary<int,int> p, int s, int e) { finalPath=new List<int>(); int c=e; while(c!=s && p.ContainsKey(c)) { finalPath.Add(c); c=p[c]; } finalPath.Add(s); finalPath.Reverse(); }
