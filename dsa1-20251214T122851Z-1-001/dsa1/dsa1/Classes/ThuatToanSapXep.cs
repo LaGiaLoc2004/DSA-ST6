@@ -1,6 +1,6 @@
 using dsa1;
 
-public class ThuatToanSapXep
+public class ThuanToanSapXep
 {
     // INSERTION SORT
     public static void InsertionSort<T>(MyStack<T> stack)
